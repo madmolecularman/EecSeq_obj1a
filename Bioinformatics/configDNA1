@@ -1,5 +1,5 @@
 Number of Processors
-64
+24
 Maximum Memory
 0
 Trimming
@@ -10,6 +10,10 @@ Type_of_Assembly
 
 Clustering_Similarity%
 
+Minimum within individual coverage level to include a read for assembly (K1)
+2
+Minimum number of individuals a read must be present in to include for assembly (K2)
+2
 Mapping_Reads?
 no
 Mapping_Match_Value
@@ -21,4 +25,4 @@ Mapping_GapOpen_Penalty
 Calling_SNPs?
 no
 Email
-jpuritz@gmail.com
+gree9242@uri.edu
