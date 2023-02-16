@@ -100,7 +100,89 @@ fastqc -f fastq -t 20 *.fq.gz
 multiqc .
 ```
 
-## Results
+## Masking old bed files with haplotig bed file
+
+Copy old bed files
+
+```bash
+cp /home/Genomic_Resources/C_virginica/bed_and_GFF/*bed .
+```
+
+Pull haplotig bed from github repo https://github.com/The-Eastern-Oyster-Genome-Project/2022_Eastern_Oyster_Haplotig_Masked_Genome/blob/main/Haplotig_Masking/Haplotig_Masking.md
+
+```bash
+wget https://raw.githubusercontent.com/The-Eastern-Oyster-Genome-Project/2022_Eastern_Oyster_Haplotig_Masked_Genome/main/Haplotig_Masking/Output/haplotigs.bed
+```
+
+Use bedtools subtract to remove haplotigs present inthe bed file from the other bed files
+
+```bash
+declare -a StringArray=("sorted.ref3.0.CDS.sc" "sorted.ref3.0.exon.sc" "sorted.ref3.0.gene.sc" "sorted.ref3.0.UTR.sc" )
+for i in "${StringArray[@]}"
+do
+bedtools subtract -A -a ${i}.bed -b haplotigs.bed > ${i}.hmask.bed
+done
+```
+
+```text
+sorted.ref3.0.CDS.sc.hmask.bed  sorted.ref3.0.exon.sc.hmask.bed  sorted.ref3.0.gene.sc.hmask.bed  sorted.ref3.0.UTR.sc.hmask.bed
+```
+
+## Demultiplexing capture files
+
+Use process_shortreads to demultiplex files. In the DNA/demux folder. One of the major problems is that we are not sure if novogene was able to separate out the different capture pools. We need to create a demultiplexing run that will filter the index and the inline barcode into the proper file
+
+First I have to create a barcode file that is tab delimited
+
+```bash
+nano barcodes
+```
+
+```text
+ATCACG	ATTACTCG    N13C1
+ATCACG	TCCGGAGA	N23C1
+ATCACG	CGCTCATT	G33C1
+ATCACG	GAGATTCC	G53C1
+ATCACG	ATTCAGAA	B33C1
+ATCACG	GAATTCGT	B43C1
+ATCACG	CTGAAGCT	K43C1
+ATCACG	TAATGCGC	K33C1
+ATCACG	CGGCTATG	M43C1
+ATCACG	TCCGCGAA	M33C1
+CGATGT	ATTACTCG	N13C2
+CGATGT	TCCGGAGA	N23C2
+CGATGT	CGCTCATT	G33C2
+CGATGT	GAGATTCC	G53C2
+CGATGT	ATTCAGAA	B33C2
+CGATGT	GAATTCGT	B43C2
+CGATGT	CTGAAGCT	K43C2
+CGATGT	TAATGCGC	K33C2
+CGATGT	CGGCTATG	M43C2
+CGATGT	TCCGCGAA	M33C2
+TTAGGC	ATTACTCG	N13C3
+TTAGGC	TCCGGAGA	N23C3
+TTAGGC	CGCTCATT	G33C3
+TTAGGC	GAGATTCC	G53C3
+TTAGGC	ATTCAGAA	B33C3
+TTAGGC	GAATTCGT	B43C3
+TTAGGC	CTGAAGCT	K43C3
+TTAGGC	TAATGCGC	K33C3
+TTAGGC	CGGCTATG	M43C3
+TTAGGC	TCCGCGAA	M33C3
+TGGCCA	ATTACTCG	N13C4
+TGGCCA	TCCGGAGA	N23C4
+TGGCCA	CGCTCATT	G33C4
+TGGCCA	GAGATTCC	G53C4
+TGGCCA	ATTCAGAA	B33C4
+TGGCCA	GAATTCGT	B43C4
+TGGCCA	CTGAAGCT	K43C4
+TGGCCA	TAATGCGC	K33C4
+TGGCCA	CGGCTATG	M43C4
+TGGCCA	TCCGCGAA	M33C4
+```
+
+
+## Continuing with global capture files
 
 For right now I am going to keep the capture files as one files. Meaning all individuals will be group into one category based on their size selection of the probe and gDNA fragment length. The Multiqc shows great stats across the board and I will be able to do an initial pass for coverage differences across all the treatment irrespective of individual differences or comparisons. 
 
