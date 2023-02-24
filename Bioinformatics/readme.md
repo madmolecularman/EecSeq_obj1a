@@ -27,55 +27,55 @@ done
 ## Copy Forward 1 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L1_1.fq.gz ${i}.F1.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L1_1.fq.gz ${i}.R1.fastq.gz
 done
 
 ## Copy Forward 2 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L2_1.fq.gz ${i}.F2.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L2_1.fq.gz ${i}.R1.fastq.gz
 done
 
 ## Copy Forward 3 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L3_1.fq.gz ${i}.F3.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L3_1.fq.gz ${i}.reseq.R1.fastq.gz
 done
 
 ## Copy Forward 4 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L4_1.fq.gz ${i}.F4.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L4_1.fq.gz ${i}.reseq.R1.fastq.gz
 done
 
 ## Copy Reverse 1 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L1_2.fq.gz ${i}.R1.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L1_2.fq.gz ${i}.R2.fastq.gz
 done
 
 ## Copy Reverse 2 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L2_2.fq.gz ${i}.R2.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L2_2.fq.gz ${i}.R2.fastq.gz
 done
 
 ## Copy Reverse 3 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L3_2.fq.gz ${i}.R3.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L3_2.fq.gz ${i}reseq.R2.fastq.gz
 done
 
 ## Copy Reverse 4 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L4_2.fq.gz ${i}.R4.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L4_2.fq.gz ${i}reseq.R3.fastq.gz
 done
 ```
 
 ## Run fastqc and multiqc to visualize files
 ```bash
-fastqc -f fastq -t 20 *.fq.gz
+fastqc -f fastq -t 20 *.fastq.gz
 multiqc .
 ```
 
@@ -99,6 +99,7 @@ done
 fastqc -f fastq -t 20 *.fq.gz
 multiqc .
 ```
+
 
 ## Masking old bed files with haplotig bed file
 
@@ -128,59 +129,115 @@ done
 sorted.ref3.0.CDS.sc.hmask.bed  sorted.ref3.0.exon.sc.hmask.bed  sorted.ref3.0.gene.sc.hmask.bed  sorted.ref3.0.UTR.sc.hmask.bed
 ```
 
+## Renaming files for demultiplexing
+
+Rename fq suffix to fastq
+```bash
+for file in *.fq.gz; do mv -- "$file" "${file%fq.gz}fastq.gz"; done
+```
+
+Rename R1 files to R2 to reflect reverse read naming convention
+```bash
+for file in *R1.fastq.gz; do mv -- "$file" "${file%R1.fastq.gz}R2.fastq.gz"; done
+for file in *R1_fastqc.zip; do mv -- "$file" "${file%R1_fastqc.zip}R2_fastqc.zip"; done
+for file in *R1_fastqc.html; do mv -- "$file" "${file%R1_fastqc.html}R2_fastqc.html"; done
+```
+
+Rename F1 and F2 files to R1 to reflect forward read naming convention
+
+```bash
+# For F1 file -> R1 file naming
+for file in *F1.fastq.gz; do mv -- "$file" "${file%F1.fastq.gz}R1.fastq.gz"; done
+for file in *F1_fastqc.zip; do mv -- "$file" "${file%F1_fastqc.zip}R1_fastqc.zip"; done
+for file in *F1_fastqc.html; do mv -- "$file" "${file%F1_fastqc.html}R1_fastqc.html"; done
+
+# For F2 file -> R1 file naming
+for file in *F2.fastq.gz; do mv -- "$file" "${file%F2.fastq.gz}R1.fastq.gz"; done
+for file in *F2_fastqc.zip; do mv -- "$file" "${file%F2_fastqc.zip}R1_fastqc.zip"; done
+for file in *F2_fastqc.html; do mv -- "$file" "${file%F2_fastqc.html}R1_fastqc.html"; done
+
+```
+
 ## Demultiplexing capture files
 
-Use process_shortreads to demultiplex files. In the DNA/demux folder. One of the major problems is that we are not sure if novogene was able to separate out the different capture pools. We need to create a demultiplexing run that will filter the index and the inline barcode into the proper file
+Use process_shortreads to demultiplex files. In the DNA/demux folder. One of the major problems is that we are not sure if novogene was able to separate out the different capture pools. We need to create a demultiplexing run that will filter the index and the inline barcode into the proper file. The question here is can I demultiplex just the index and then the adapter inline barcode?
+
+Its important to understand what ![process_shortreads](https://catchenlab.life.illinois.edu/stacks/comp/process_shortreads.php) is doing and how to create the barcode files ![Stacks manual](https://catchenlab.life.illinois.edu/stacks/manual/index.php#clean)
 
 First I have to create a barcode file that is tab delimited
 
 ```bash
-nano barcodes
+nano barcodes.tsv
 ```
 
 ```text
-ATCACG	ATTACTCG    N13C1
-ATCACG	TCCGGAGA	N23C1
-ATCACG	CGCTCATT	G33C1
-ATCACG	GAGATTCC	G53C1
-ATCACG	ATTCAGAA	B33C1
-ATCACG	GAATTCGT	B43C1
-ATCACG	CTGAAGCT	K43C1
-ATCACG	TAATGCGC	K33C1
-ATCACG	CGGCTATG	M43C1
-ATCACG	TCCGCGAA	M33C1
-CGATGT	ATTACTCG	N13C2
-CGATGT	TCCGGAGA	N23C2
-CGATGT	CGCTCATT	G33C2
-CGATGT	GAGATTCC	G53C2
-CGATGT	ATTCAGAA	B33C2
-CGATGT	GAATTCGT	B43C2
-CGATGT	CTGAAGCT	K43C2
-CGATGT	TAATGCGC	K33C2
-CGATGT	CGGCTATG	M43C2
-CGATGT	TCCGCGAA	M33C2
-TTAGGC	ATTACTCG	N13C3
-TTAGGC	TCCGGAGA	N23C3
-TTAGGC	CGCTCATT	G33C3
-TTAGGC	GAGATTCC	G53C3
-TTAGGC	ATTCAGAA	B33C3
-TTAGGC	GAATTCGT	B43C3
-TTAGGC	CTGAAGCT	K43C3
-TTAGGC	TAATGCGC	K33C3
-TTAGGC	CGGCTATG	M43C3
-TTAGGC	TCCGCGAA	M33C3
-TGGCCA	ATTACTCG	N13C4
-TGGCCA	TCCGGAGA	N23C4
-TGGCCA	CGCTCATT	G33C4
-TGGCCA	GAGATTCC	G53C4
-TGGCCA	ATTCAGAA	B33C4
-TGGCCA	GAATTCGT	B43C4
-TGGCCA	CTGAAGCT	K43C4
-TGGCCA	TAATGCGC	K33C4
-TGGCCA	CGGCTATG	M43C4
-TGGCCA	TCCGCGAA	M33C4
+ATCACG	ATCACG  Capture1
+CGATGT	CGATGT  Capture2
+TTAGGC	TTAGGC  Capture3
+TGGCCA	TGGCCA  Capture4
 ```
 
+Make directories for all of the files
+
+```bash
+mkdir samples
+cd samples
+
+declare -a StringArray=("Capture1_B3" "Capture1_G5" "Capture1_M3" "Capture1_N2" "Capture2_G3" "Capture2_K4" "Capture2_N1" "Capture3_B4" "Capture3_K3" "Capture3_M4" "Capture4_B3" "Capture4_G5" "Capture4_M3" "Capture4_N2" "Capture1_B4" "Capture1_K3" "Capture1_M4" "Capture2_B3" "Capture2_G5" "Capture2_M3" "Capture2_N2" "Capture3_G3" "Capture3_K4" "Capture3_N1" "Capture4_B4" "Capture4_K3" "Capture4_M4" "Capture1_G3" "Capture1_K4" "Capture1_N1" "Capture2_B4" "Capture2_K3" "Capture2_M4" "Capture3_B3" "Capture3_G5" "Capture3_M3" "Capture3_N2" "Capture4_G3" "Capture4_K4" "Capture4_N1")
+
+for i in "${StringArray[@]}"
+do
+mkdir ${i}
+done
+```
+
+Try it on one file (ran from DNA directory)
+
+```bash
+process_shortreads -P -1 ./raw/Capture1_N1.R1.fastq.gz -2 ./raw/Capture1_N1.R2.fastq.gz -o ./samples/Capture1_B3/ -b ./barcodes/barcodes.tsv --inline_inline -c -q -r --barcode_dist_2 3
+```
+
+This result is in ./samples/Capture1_N1/process_shortreads.log. There are some weird results including a mixture of the different barcodes.
+
+<center>
+
+|Sequence Category|Sequence Number|
+|-----------------|---------------|
+|Total Sequences|	35392266|
+|Ambiguous Barcodes|	35309540|
+|Low Quality|	273|
+|Trimmed Reads|	0|
+|Orphaned Paired-ends|	0|
+|Retained Reads|	82453|
+
+
+|Barcode|	Total|	Retained|
+|-------|--------|----------|
+|ATCACG-CGTGAT|	8128|	8112|
+|CGATGT-ACATCG|	52322|	52119|
+|TTAGGC-GCCTAA|	17622|	17576|
+|TGGCCA-TGGCCA|	4654|	4646|
+
+</center>
+
+### Sequences not recorded (subset)
+
+<center>
+
+|Barcode|	Total|
+|-------|--------|
+|CGATGT-CGATGT|	13471732|
+|CGATGT-GGGGGG|	34484|
+|CGATGT-CGAGGT|	10924|
+
+</center>
+
+
+```bash
+# Using process shortreads on a whole directory containing these files
+# Cannot use yet
+process_shortreads -P -p ./raw/ -o ./samples/ -b ./barcodes/barcodes.tsv --inline_inline -c -q -r --barcode_dist 3
+```
 
 ## Continuing with global capture files
 
