@@ -1,0 +1,4 @@
+ATCGCG	Capture1
+CGATGT	Capture2
+TTAGGC	Capture3
+TGGCCA	Capture4
