@@ -69,7 +69,7 @@ done
 ## Copy Reverse 4 reads
 for i in "${StringArray[@]}"
 do
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L4_2.fq.gz ${i}reseq.R3.fastq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/${i}/${i}_*_L4_2.fq.gz ${i}reseq.R2.fastq.gz
 done
 ```
 
@@ -80,26 +80,332 @@ multiqc .
 ```
 
 ## Results
-Multiqc plots show uneven distribution of sequence counts specifically in samples Capture1_N1.F1, Capture1_N1.R1, Capture2_N1.F2, Capture2_N1.R2, Capture3_N1.F3, Capture3_N1.R3, Capture4_N1.F4, Capture4_N1.R4
+Multiqc plots show uneven distribution of sequence counts specifically in samples Capture1_N1.R1, Capture1_N1.R2, Capture2_N1.R1, Capture2_N1.R2, Capture3_N1.reseq.R1, Capture3_N1.reseq.R2, Capture4_N1.reseq.R1, Capture4_N1.reseq.R2. See [multiqc report]()
 
+## Renaming reads
 
-## Going to concatenate all the files from each capture into one file
+I need to be careful with some changes to the reads. 
+1) Capture 2 = Capture 1
+2) Capture 1 = Capture 2
+3) Capture 3 = Capture 3
+4) Capture 4 = Capture 4
+
+Move capture 1 and capture 2 files into different directories
 ```bash
-for i in 1:4
-do
-cat ../raw/Capture${i}_*.F*.fq.gz >> capture${i}_F.fq.gz
-done
+mkdir capture1
+mkdir capture2
+mv Capture2* capture1/
+mv Capture1* capture2/
+  ```
 
-for i in 1:4
-do
-cat ../raw/Capture${i}_*.R*.fq.gz >> capture${i}_R.fq.gz
-done
+Rename Capture1 preffix to Capture2 preffix
+```bash
+rename Capture1 Capture2 Capture1*
+rename Capture2 Capture1 Capture2*
+```
 
-## Run Fastqq and multiqc
-fastqc -f fastq -t 20 *.fq.gz
+Redo fastqc and multiqc
+```bash
 multiqc .
 ```
 
+## Fixing mixed files
+
+Capture1_G3.R1, Capture1_G3.R2, Capture1_G3.reseq.R1, Capture1_G3.reseq.R2 are actually capture2
+
+Capture2_G3.R1, Capture2_G3.R2, Capture2_G3.reseq.R1, Capture2_G3.reseq.R2 are actually capture1
+
+Capture2_N2.R1, Capture2_N2.R2, Capture2_N2.reseq.R1, Capture2_N2.reseq.R1 are actually capture1
+
+Capture1_N2.R1, Capture2_N2.R2, Capture2_N2.reseq.R1, Capture2_N2.reseq.R1 are actually capture2
+
+```bash
+rename Capture2 Capture1 Capture2*
+rename Capture1 Capture2 Capture1*
+```
+
+## Processing short reads on files that are not demultiplexed
+
+## Demultiplexing capture files
+
+Use process_shortreads to demultiplex files from raw/ to the demux/samples/ folder. One of the major problems is that we are not sure if novogene was able to separate out the different capture pools specifically for Capture[1-4]_N1 samples and Capture[1-4]_N1 resequenced. We need to create a demultiplexing run that will filter the index and the inline barcode into the proper file. The question here is can I demultiplex just the index and then the adapter inline barcode?
+
+Its important to understand what ![process_shortreads](https://catchenlab.life.illinois.edu/stacks/comp/process_shortreads.php) is doing and how to create the barcode files ![Stacks manual](https://catchenlab.life.illinois.edu/stacks/manual/index.php#clean)
+
+First I have to create a barcode file that is tab delimited
+
+```bash
+nano combined_barcodes.txt
+```
+
+```text
+ATCGCG	CGTGAT	Capture1
+CGATGT	ACATCG	Capture2
+TTAGGC	GCCTAA	Capture3
+TGGCCA	TGGCCA	Capture4
+```
+
+Be careful to create this files in nane and don't edit it in the VScode text editor. VScode will change the endline with a "M^" character that is incompatible with process_shortreads program. To view if there are there use the following
+
+```bash
+cat -A <barcodes.tsv>
+```
+
+Make directories for all of the files
+
+```bash
+mkdir samples
+cd samples
+```
+
+Making directories for Capture[1-4]_N1 and reseq files
+```bash
+declare -a StringArray=("Capture1_N1" "Capture1_N1_reseq" "Capture2_N1" "Capture2_N1_reseq" "Capture3_N1" "Capture3_N1_reseq" "Capture4_N1" "Capture4_N1_reseq")
+
+for i in "${StringArray[@]}"
+do
+mkdir ${i}
+done
+```
+
+Renaming samples directory to combined barcode samples directory
+
+```bash
+mv samples/ combined_barcode_samples
+```
+
+Try process_shortreads on one pair of files (ran from 01_process_reads/raw/ directory)
+
+```bash
+process_shortreads -P -1 Capture1_N1_R1.fastq.gz -2 Capture1_N1_R2.fastq.gz -o ../demux/combined_barcode_samples/Capture1_N1/ -b ../barcodes/combined_barcode.txt --inline_inline -r -c -q
+process_shortreads -P -1 Capture1_N1.reseq.R1.fastq.gz -2 Capture1_N1.reseq.R2.fastq.gz -o ../demux/combined_barcode_samples/Capture1_N1_reseq/ -b ../barcodes/combined_barcode.txt --inline_inline -r -c -q
+process_shortreads -P -1 Capture2_N1.R1.fastq.gz -2 Capture2_N1.R2.fastq.gz -o ../demux/combined_barcode_samples/Capture2_N1/ -b ../barcodes/combined_barcode.txt --inline_inline -r -c -q
+process_shortreads -P -1 Capture2_N1.reseq.R1.fastq.gz -2 Capture2_N1.reseq.R2.fastq.gz -o ../demux/combined_barcode_samples/Capture2_N1_reseq/ -b ../barcodes/combined_barcode.txt --inline_inline -r -c -q
+process_shortreads -P -1 Capture3_N1.R1.fastq.gz -2 Capture3_N1.R2.fastq.gz -o ../demux/combined_barcode_samples/Capture3_N1/ -b ../barcodes/combined_barcode.txt --inline_inline -r -c -q
+process_shortreads -P -1 Capture3_N1.reseq.R1.fastq.gz -2 Capture3_N1.reseq.R2.fastq.gz -o ../demux/combined_barcode_samples/Capture3_N1_reseq/ -b ../barcodes/combined_barcode.txt --inline_inline -r -c -q
+process_shortreads -P -1 Capture4_N1.R1.fastq.gz -2 Capture4_N1.R2.fastq.gz -o ../demux/combined_barcode_samples/Capture4_N1/ -b ../barcodes/combined_barcode.txt --inline_inline -r -c -q
+process_shortreads -P -1 Capture4_N1.reseq.R1.fastq.gz -2 Capture4_N1.reseq.R2.fastq.gz -o ../demux/combined_barcode_samples/Capture4_N1_reseq/ -b ../barcodes/combined_barcode.txt --inline_inline -r -c -q
+```
+
+Make smaller process_shortread log files for easier viewing
+
+```bash
+declare -a StringArray=("Capture1_N1" "Capture1_N1_reseq" "Capture2_N1" "Capture2_N1_reseq" "Capture3_N1" "Capture3_N1_reseq" "Capture4_N1" "Capture4_N1_reseq")
+
+for i in "${StringArray[@]}"
+do
+echo ${i}
+done
+
+for i in "${StringArray[@]}"
+do
+head -n 100 ${i}/process_shortreads.log > ${i}/${i}process_shortreads.short.log
+done
+```
+
+See 01_process_reads/demux/combined_barcode_samples with each directories process_shortreads.short.log file. What we can see are large number of ambiguous reads being discarded amny of which are in the sequences not recorded. 
+
+| File                    | Retained Reads | Low Quality | Ambiguous Barcodes | Trimmed Reads | Orphaned paired-end reads | Total    |
+|-------------------------|----------------|-------------|--------------------|---------------|---------------------------|----------|
+| Capture1_N1_R1.fastq.gz | 648            | 0           | 29671776           | 0             | 0                         | 29672424 |
+
+
+| Total Sequences      | 29672424 |
+|----------------------|----------|
+| Ambiguous Barcodes   | 29671776 |
+| Low Quality          | 0        |
+| Trimmed Reads        | 0        |
+| Orphaned Paired-ends | 0        |
+| Retained Reads       | 648      |
+
+| Barcode       | Filename | Total | Retained |
+|---------------|----------|-------|----------|
+| ATCGCG-CGTGAT | Capture1 | 34    | 34       |
+| CGATGT-ACATCG | Capture2 | 310   | 310      |
+| TTAGGC-GCCTAA | Capture3 | 122   | 122      |
+| TGGCCA-TGGCCA | Capture4 | 182   | 182      |
+
+**Sequences not recorded**
+
+| Barcode       | Total    |
+|---------------|----------|
+| CGATGT-CGATGT | 14620908 |
+| CGATGT-GGGGGG | 32992    |
+| CGATGT-AGATGT | 22422    |
+
+This is the case for Capture[1-3]_N1 and their reseq files. Capture4_N1 does not have this issue as its adapter barcode is a palindrome. It seems like the forward and reverse reads contain the barcode not its compliment. Going to test a few things
+
+## Using index_null process short reads to investigate issue with ambiguous reads
+New directory for single inline barcodes. I am wanting to test out how we retain reads with single barcodes.
+
+Make new barcode file
+
+``bash
+nano single_barcode.txt
+```
+
+```text
+ATCGCG	Capture1
+CGATGT	Capture2
+TTAGGC	Capture3
+TGGCCA	Capture4
+```
+
+```bash
+mkdir single_barcode_samples
+cd single_barcode_samples
+```
+
+Making directories for Capture[1-4]_N1 and reseq files
+```bash
+declare -a StringArray=("Capture1_N1" "Capture1_N1_reseq" "Capture2_N1" "Capture2_N1_reseq" "Capture3_N1" "Capture3_N1_reseq" "Capture4_N1" "Capture4_N1_reseq")
+
+for i in "${StringArray[@]}"
+do
+mkdir ${i}
+done
+```
+
+Try process_shortreads on one pair of files (ran from 01_process_reads/raw/ directory)
+
+```bash
+process_shortreads -P -1 Capture1_N1_R1.fastq.gz -2 Capture1_N1_R2.fastq.gz -o ../demux/single_barcode_samples/Capture1_N1/ -b ../barcodes/single_barcode.txt --inline_null -r -c -q
+#process_shortreads -P -1 Capture1_N1.reseq.R1.fastq.gz -2 Capture1_N1.reseq.R2.fastq.gz -o ../demux/single_barcode_samples/Capture1_N1_reseq/ -b ../barcodes/single_barcode.txt --inline_null -r -c -q
+#process_shortreads -P -1 Capture2_N1.R1.fastq.gz -2 Capture2_N1.R2.fastq.gz -o ../demux/single_barcode_samples/Capture2_N1/ -b ../barcodes/single_barcode.txt --inline_null -r -c -q
+#process_shortreads -P -1 Capture2_N1.reseq.R1.fastq.gz -2 Capture2_N1.reseq.R2.fastq.gz -o ../demux/single_barcode_samples/Capture2_N1_reseq/ -b ../barcodes/single_barcode.txt --inline_null -r -c -q
+#process_shortreads -P -1 Capture3_N1.R1.fastq.gz -2 Capture3_N1.R2.fastq.gz -o ../demux/single_barcode_samples/Capture3_N1/ -b ../barcodes/single_barcode.txt --inline_null -r -c -q
+#process_shortreads -P -1 Capture3_N1.reseq.R1.fastq.gz -2 Capture3_N1.reseq.R2.fastq.gz -o ../demux/single_barcode_samples/Capture3_N1_reseq/ -b ../barcodes/single_barcode.txt --inline_null -r -c -q
+#process_shortreads -P -1 Capture4_N1.R1.fastq.gz -2 Capture4_N1.R2.fastq.gz -o ../demux/single_barcode_samples/Capture4_N1/ -b ../barcodes/single_barcode.txt --inline_null -r -c -q
+#process_shortreads -P -1 Capture4_N1.reseq.R1.fastq.gz -2 Capture4_N1.reseq.R2.fastq.gz -o ../demux/single_barcode_samples/Capture4_N1_reseq/ -b ../barcodes/single_barcode.txt --inline_null -r -c -q
+```
+
+Make smaller process_shortread log files for easier viewing (run from single_barcode_sample)
+
+```bash
+declare -a StringArray=("Capture1_N1" "Capture1_N1_reseq" "Capture2_N1" "Capture2_N1_reseq" "Capture3_N1" "Capture3_N1_reseq" "Capture4_N1" "Capture4_N1_reseq")
+
+for i in "${StringArray[@]}"
+do
+echo ${i}
+done
+
+for i in "${StringArray[@]}"
+do
+head -n 100 ${i}/process_shortreads.log > ${i}/${i}process_shortreads.short.log
+done
+```
+
+See 01_process_reads/demux/single_barcode_samples with each Capture1_N1 process_shortreads.short.log file. We retain more reads! Yay! But we have 14 million ambiguous barcodes? Is it not reading on of the paired files? We can also see the the ambiguous barcodes are not recorded.
+
+| File                    | Retained Reads | Low Quality | Ambiguous Barcodes | Trimmed Reads | Orphaned paired-end reads | Total    |
+|-------------------------|----------------|-------------|--------------------|---------------|---------------------------|----------|
+| Capture1_N1_R1.fastq.gz | 15129309       | 32341       | 14510774           | 0             | 0                         | 29672424 |
+
+
+| Total Sequences      | 29672424 |
+|----------------------|----------|
+| Ambiguous Barcodes   | 14510774 |
+| Low Quality          | 32341    |
+| Trimmed Reads        | 0        |
+| Orphaned Paired-ends | 0        |
+| Retained Reads       | 15129309 |
+
+| Barcode | Filename | Total    | Retained |
+|---------|----------|----------|----------|
+| ATCGCG  | Capture1 | 60438    | 60311    |
+| CGATGT  | Capture2 | 14938002 | 14906109 |
+| TTAGGC  | Capture3 | 92194    | 92011    |
+| TGGCCA  | Capture4 | 71016    | 70878    |
+
+
+Sequences not recorded
+| Barcode | Total |
+|---------|-------|
+| GTTTGG  | 15032 |
+| GTGTTC  | 14364 |
+
+
+Now lets place exact copies of the barcodes doubling them in the file and try to pull out both the forward and reverse files with that.
+
+## Using duplicated barcodes and inline_inline to invetigate ambigous barcode drop for R2 files
+
+New directory for single inline barcodes. I am wanting to test out how we retain reads with single barcodes.
+
+Make new barcode file
+
+``bash
+nano double_barcode.txt
+```
+
+```text
+ATCGCG  ATCGCG	Capture1
+CGATGT  CGATGT	Capture2
+TTAGGC  TTAGGC	Capture3
+TGGCCA  TGGCCA	Capture4
+```
+
+```bash
+mkdir double_barcode_samples
+cd double_barcode_samples
+```
+
+Making directories for Capture[1-4]_N1 and reseq files
+```bash
+declare -a StringArray=("Capture1_N1" "Capture1_N1_reseq" "Capture2_N1" "Capture2_N1_reseq" "Capture3_N1" "Capture3_N1_reseq" "Capture4_N1" "Capture4_N1_reseq")
+
+for i in "${StringArray[@]}"
+do
+mkdir ${i}
+done
+```
+
+```bash
+process_shortreads -P -1 Capture1_N1_R1.fastq.gz -2 Capture1_N1_R2.fastq.gz -o ../demux/double_barcode_samples/Capture1_N1/ -b ../barcodes/double_barcode.txt --inline_inline -r -c -q
+process_shortreads -P -1 Capture1_N1.reseq.R1.fastq.gz -2 Capture1_N1.reseq.R2.fastq.gz -o ../demux/double_barcode_samples/Capture1_N1_reseq/ -b ../barcodes/double_barcode.txt --inline_inline -r -c -q
+```
+
+Make smaller process_shortread log files for easier viewing (run from single_barcode_sample)
+
+```bash
+declare -a StringArray=("Capture1_N1" "Capture1_N1_reseq" "Capture2_N1" "Capture2_N1_reseq" "Capture3_N1" "Capture3_N1_reseq" "Capture4_N1" "Capture4_N1_reseq")
+
+for i in "${StringArray[@]}"
+do
+echo ${i}
+done
+
+for i in "${StringArray[@]}"
+do
+head -n 100 ${i}/process_shortreads.log > ${i}/${i}process_shortreads.short.log
+done
+```
+
+I am now more confused. So here we see a drop in about half of our reads in the ambiguous reads. We have lost a lot of the retain barcodes from the other capture compaired to the single approach.
+
+| File                    | Retained Reads | Low Quality | Ambiguous Barcodes | Trimmed Reads | Orphaned paired-end reads | Total    |
+|-------------------------|----------------|-------------|--------------------|---------------|---------------------------|----------|
+| Capture1_N1_R1.fastq.gz | 14658692       | 31070       | 14982662           | 0             | 0                         | 29672424 |
+
+| Total Sequences      | 29672424 |
+|----------------------|----------|
+| Ambiguous Barcodes   | 14982662 |
+| Low Quality          | 31070    |
+| Trimmed Reads        | 0        |
+| Orphaned Paired-ends | 0        |
+| Retained Reads       | 14658692 |
+
+| Barcode       | Filename | Total    | Retained |
+|---------------|----------|----------|----------|
+| ATCGCG-ATCGCG | Capture1 | 34       | 34       |
+| CGATGT-CGATAT | Capture2 | 14687394 | 14656325 |
+| TTAGGC-TTAGGC | Capture3 | 2152     | 2151     |
+| TGGCCA-TGGCCA | Capture4 | 182      | 182      |
+
+Sequences not recorded
+| Barcode       | Total |
+|---------------|-------|
+| CGATGT-GGGGGG | 32992 |
+| CGATGT-AGATGT | 22422 |
 
 ## Masking old bed files with haplotig bed file
 
@@ -127,133 +433,6 @@ done
 
 ```text
 sorted.ref3.0.CDS.sc.hmask.bed  sorted.ref3.0.exon.sc.hmask.bed  sorted.ref3.0.gene.sc.hmask.bed  sorted.ref3.0.UTR.sc.hmask.bed
-```
-
-## Renaming files for demultiplexing
-
-Rename fq suffix to fastq
-```bash
-for file in *.fq.gz; do mv -- "$file" "${file%fq.gz}fastq.gz"; done
-```
-
-Rename R1 files to R2 to reflect reverse read naming convention
-```bash
-for file in *R1.fastq.gz; do mv -- "$file" "${file%R1.fastq.gz}R2.fastq.gz"; done
-for file in *R1_fastqc.zip; do mv -- "$file" "${file%R1_fastqc.zip}R2_fastqc.zip"; done
-for file in *R1_fastqc.html; do mv -- "$file" "${file%R1_fastqc.html}R2_fastqc.html"; done
-```
-
-Rename F1 and F2 files to R1 to reflect forward read naming convention
-
-```bash
-# For F1 file -> R1 file naming
-for file in *F1.fastq.gz; do mv -- "$file" "${file%F1.fastq.gz}R1.fastq.gz"; done
-for file in *F1_fastqc.zip; do mv -- "$file" "${file%F1_fastqc.zip}R1_fastqc.zip"; done
-for file in *F1_fastqc.html; do mv -- "$file" "${file%F1_fastqc.html}R1_fastqc.html"; done
-
-# For F2 file -> R1 file naming
-for file in *F2.fastq.gz; do mv -- "$file" "${file%F2.fastq.gz}R1.fastq.gz"; done
-for file in *F2_fastqc.zip; do mv -- "$file" "${file%F2_fastqc.zip}R1_fastqc.zip"; done
-for file in *F2_fastqc.html; do mv -- "$file" "${file%F2_fastqc.html}R1_fastqc.html"; done
-
-```
-
-## Demultiplexing capture files
-
-Use process_shortreads to demultiplex files. In the DNA/demux folder. One of the major problems is that we are not sure if novogene was able to separate out the different capture pools. We need to create a demultiplexing run that will filter the index and the inline barcode into the proper file. The question here is can I demultiplex just the index and then the adapter inline barcode?
-
-Its important to understand what ![process_shortreads](https://catchenlab.life.illinois.edu/stacks/comp/process_shortreads.php) is doing and how to create the barcode files ![Stacks manual](https://catchenlab.life.illinois.edu/stacks/manual/index.php#clean)
-
-First I have to create a barcode file that is tab delimited
-
-```bash
-nano barcodes.tsv
-```
-
-```text
-ATCACG	ATCACG  Capture1
-CGATGT	CGATGT  Capture2
-TTAGGC	TTAGGC  Capture3
-TGGCCA	TGGCCA  Capture4
-```
-
-Make directories for all of the files
-
-```bash
-mkdir samples
-cd samples
-
-declare -a StringArray=("Capture1_B3" "Capture1_G5" "Capture1_M3" "Capture1_N2" "Capture2_G3" "Capture2_K4" "Capture2_N1" "Capture3_B4" "Capture3_K3" "Capture3_M4" "Capture4_B3" "Capture4_G5" "Capture4_M3" "Capture4_N2" "Capture1_B4" "Capture1_K3" "Capture1_M4" "Capture2_B3" "Capture2_G5" "Capture2_M3" "Capture2_N2" "Capture3_G3" "Capture3_K4" "Capture3_N1" "Capture4_B4" "Capture4_K3" "Capture4_M4" "Capture1_G3" "Capture1_K4" "Capture1_N1" "Capture2_B4" "Capture2_K3" "Capture2_M4" "Capture3_B3" "Capture3_G5" "Capture3_M3" "Capture3_N2" "Capture4_G3" "Capture4_K4" "Capture4_N1")
-
-for i in "${StringArray[@]}"
-do
-mkdir ${i}
-done
-```
-
-Try it on one file (ran from DNA directory)
-
-```bash
-process_shortreads -P -1 ./raw/Capture1_N1.R1.fastq.gz -2 ./raw/Capture1_N1.R2.fastq.gz -o ./samples/Capture1_B3/ -b ./barcodes/barcodes.tsv --inline_inline -c -q -r --barcode_dist_2 3
-```
-
-This result is in ./samples/Capture1_N1/process_shortreads.log. There are some weird results including a mixture of the different barcodes.
-
-<center>
-
-|Sequence Category|Sequence Number|
-|-----------------|---------------|
-|Total Sequences|	35392266|
-|Ambiguous Barcodes|	35309540|
-|Low Quality|	273|
-|Trimmed Reads|	0|
-|Orphaned Paired-ends|	0|
-|Retained Reads|	82453|
-
-
-|Barcode|	Total|	Retained|
-|-------|--------|----------|
-|ATCACG-CGTGAT|	8128|	8112|
-|CGATGT-ACATCG|	52322|	52119|
-|TTAGGC-GCCTAA|	17622|	17576|
-|TGGCCA-TGGCCA|	4654|	4646|
-
-</center>
-
-### Sequences not recorded (subset)
-
-<center>
-
-|Barcode|	Total|
-|-------|--------|
-|CGATGT-CGATGT|	13471732|
-|CGATGT-GGGGGG|	34484|
-|CGATGT-CGAGGT|	10924|
-
-</center>
-
-
-```bash
-# Using process shortreads on a whole directory containing these files
-# Cannot use yet
-process_shortreads -P -p ./raw/ -o ./samples/ -b ./barcodes/barcodes.tsv --inline_inline -c -q -r --barcode_dist 3
-```
-
-## Continuing with global capture files
-
-For right now I am going to keep the capture files as one files. Meaning all individuals will be group into one category based on their size selection of the probe and gDNA fragment length. The Multiqc shows great stats across the board and I will be able to do an initial pass for coverage differences across all the treatment irrespective of individual differences or comparisons. 
-
-## Rename files
-
-```bash
-mv capture1_F.fq.gz C1_Sample1.F.fq.gz
-mv capture1_R.fq.gz C1_Sample1.R.fq.gz
-mv capture2_F.fq.gz C2_Sample1.F.fq.gz
-mv capture2_R.fq.gz C2_Sample1.R.fq.gz
-mv capture3_F.fq.gz C3_Sample1.F.fq.gz
-mv capture3_R.fq.gz C3_Sample1.R.fq.gz
-mv capture4_F.fq.gz C4_Sample1.F.fq.gz
-mv capture4_R.fq.gz C4_Sample1.R.fq.gz
 ```
 
 ## Run the dDoccent script
@@ -472,4 +651,77 @@ export -f counts_per_target
 Now with this function we can use `paste` and subshells to produce the table
 ```bash
 paste <(echo -e "Targets\nAll Exons\n20XR Exons\n35XR Exons\n50XR Exons") <(counts_per_target C1_Sample1) <(counts_per_target C2_Sample1) <(counts_per_target C3_Sample1) <(counts_per_target C4_Sample1) > Table3.txt
+```
+
+## Graveyard
+
+# Used for orginally renaming files for demultiplexing
+
+Rename fq suffix to fastq
+```bash
+for file in *.fq.gz; do mv -- "$file" "${file%fq.gz}fastq.gz"; done
+```
+
+Rename R1 files to R2 to reflect reverse read naming convention
+```bash
+for file in *R1.fastq.gz; do mv -- "$file" "${file%R1.fastq.gz}R2.fastq.gz"; done
+for file in *R1_fastqc.zip; do mv -- "$file" "${file%R1_fastqc.zip}R2_fastqc.zip"; done
+for file in *R1_fastqc.html; do mv -- "$file" "${file%R1_fastqc.html}R2_fastqc.html"; done
+```
+
+Rename F1 and F2 files to R1 to reflect forward read naming convention
+
+```bash
+# For F1 file -> R1 file naming
+for file in *F1.fastq.gz; do mv -- "$file" "${file%F1.fastq.gz}R1.fastq.gz"; done
+for file in *F1_fastqc.zip; do mv -- "$file" "${file%F1_fastqc.zip}R1_fastqc.zip"; done
+for file in *F1_fastqc.html; do mv -- "$file" "${file%F1_fastqc.html}R1_fastqc.html"; done
+
+# For F2 file -> R1 file naming
+for file in *F2.fastq.gz; do mv -- "$file" "${file%F2.fastq.gz}R1.fastq.gz"; done
+for file in *F2_fastqc.zip; do mv -- "$file" "${file%F2_fastqc.zip}R1_fastqc.zip"; done
+for file in *F2_fastqc.html; do mv -- "$file" "${file%F2_fastqc.html}R1_fastqc.html"; done
+
+```
+
+
+Making directories for all original samples
+```bash
+#declare -a StringArray=("Capture1_B3" "Capture1_G5" "Capture1_M3" "Capture1_N2" "Capture2_G3" "Capture2_K4" "Capture2_N1" "Capture3_B4" "Capture3_K3" "Capture3_M4" "Capture4_B3" "Capture4_G5" "Capture4_M3" "Capture4_N2" "Capture1_B4" "Capture1_K3" "Capture1_M4" "Capture2_B3" "Capture2_G5" "Capture2_M3" "Capture2_N2" "Capture3_G3" "Capture3_K4" "Capture3_N1" "Capture4_B4" "Capture4_K3" "Capture4_M4" "Capture1_G3" "Capture1_K4" "Capture1_N1" "Capture2_B4" "Capture2_K3" "Capture2_M4" "Capture3_B3" "Capture3_G5" "Capture3_M3" "Capture3_N2" "Capture4_G3" "Capture4_K4" "Capture4_N1")
+
+#for i in "${StringArray[@]}"; do; mkdir ${i}; done
+```
+
+## Continuing with global capture files
+
+For right now I am going to keep the capture files as one files. Meaning all individuals will be group into one category based on their size selection of the probe and gDNA fragment length. The Multiqc shows great stats across the board and I will be able to do an initial pass for coverage differences across all the treatment irrespective of individual differences or comparisons. 
+
+## Going to concatenate all the files from each capture into one file
+```bash
+for i in 1:4
+do
+cat ../raw/Capture${i}_*.F*.fq.gz >> capture${i}_F.fq.gz
+done
+
+for i in 1:4
+do
+cat ../raw/Capture${i}_*.R*.fq.gz >> capture${i}_R.fq.gz
+done
+
+## Run Fastqq and multiqc
+fastqc -f fastq -t 20 *.fq.gz
+multiqc .
+```
+
+## Rename files
+
+```bash
+mv capture1_F.fq.gz C1_Sample1.F.fq.gz
+mv capture1_R.fq.gz C1_Sample1.R.fq.gz
+mv capture2_F.fq.gz C2_Sample1.F.fq.gz
+mv capture2_R.fq.gz C2_Sample1.R.fq.gz
+mv capture3_F.fq.gz C3_Sample1.F.fq.gz
+mv capture3_R.fq.gz C3_Sample1.R.fq.gz
+mv capture4_F.fq.gz C4_Sample1.F.fq.gz
+mv capture4_R.fq.gz C4_Sample1.R.fq.gz
 ```
