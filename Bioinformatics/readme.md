@@ -2,11 +2,34 @@
 
 This code assumes that there are two subdirectories in this working directory ./DNA which contain the raw sequencing files from the EAGER 2022 Obj1a sequenicng project and  ./Genome directory which contains files from the eastern oyster genome.
 
+## Directory Structure
+
+01_process_reads: start of the project and where all fastq files are placed
+* barcodes: contains barcode files for demultiplexing
+* clean:  clean fastq files
+* demux:  demultiplexed fastq files
+* raw:  raw fastqfiles
+
+02_ddocent: a folder to store the output od a dDocent run. Additionally contains trimmed forward and reverse fq.gz, F.bam, and RGmd.bam files.
+
+03_mapping: a folder to store file outputs from mapping reads to the oyster genome. Files include merged capture F.bam files, linked F.bam files, genome.depth profiles, and a lists of cds, gene, and exon coordinates from the oyster gff3 annotations. 
+
+04_coverage_analysis
+* 01_genome_region
+* 02_exon_stats
+* 03_target_interval
+* 04_specificity
+
+05_snp_calling: contains output from vcftools analysis
+
+Genome:contains all reference files needed for the project
+
 ## Set working directory
 
 ```bash
 WORKING_DIR = /home/jgreen/EAGERobj1a/
 echo $WORKING_DIR
+cd $WORKING_DIR
 ```
 
 ## Setup conda environment
@@ -16,7 +39,7 @@ mamba create eagerobj1a ddocent
 conda activate eagerobj1a
 ```
 
-## Copy full haplotype masked genome over to my genome directory
+## Copy full haplotype masked genome over to my Genome/ directory
 
 ```bash
 #Copy genome
@@ -32,10 +55,10 @@ mawk -v OFS='\t' {'print $1,$2'} masked.cvir.genome.fasta > masked.genome.file
 ```bash
 cp /home/Genome_Resources/C_virginica/bed_and_GFF/ref_C_virginica-3.0_top.bed
 ```
-## Copying files to new directory and renaming to fit with ddocent naming convention
+## Copying files to 01_process_reads/raw directory and renaming to fit with ddocent naming convention
 ```bash
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/Capture1_B3/*L1_1.fq.gz Capture1_B3.R1.fq.gz
-cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/Capture1_B3/*L1_2.fq.gz Capture1_B3.R2.fq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/Capture1_B3/*L1_1.fq.gz Capture1_B3.R1.fastq.gz
+cp /RAID_STORAGE2/Raw_Data/EAGER_2022/Sequencing_Run_Nov_2022/01.RawData/Capture1_B3/*L1_2.fq.gz Capture1_B3.R2.fastq.gz
 ```
 
 ## Enmasse copying files and renaming
@@ -465,7 +488,7 @@ chmod +x dDocent_ngs.sh
 ## Run the dDocent script in the directory containing our newly named files
 
 ```bash
-../../scripts/dDocent_ngs.sh config.file
+/../scripts/dDocent_ngs.sh config.file
 ```
 
 ## Masking old bed files with haplotig bed file
@@ -1423,7 +1446,7 @@ First, use dDocent_ngs to call raw variants
 Next decompose raw variants into SNPs and InDel calls
 
 ```bash
-vcfallelicprimitives TotalRawSNPs.vcf --keep-info --keep-geno > decomp.raw.vcf
+vcfallelicprimitives TotalRawSNPs.vcf.gz --keep-info --keep-geno > decomp.raw.vcf
 ```
 
 Next, remove InDel calls
