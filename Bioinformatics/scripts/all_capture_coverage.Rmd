@@ -1,0 +1,653 @@
+---
+title: "capture_coverage_analysis"
+author: "Jacob Green"
+date: '2023-03-14'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(root.dir = "/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+```
+
+## Figure 2 capture read depth across genomic features
+
+```{r Set Libraries and Working Directory, echo = FALSE}
+library(ggplot2)
+library(grid)
+library(plyr)
+library(dplyr)
+library(scales)
+library(zoo)
+library(gridExtra)
+library(grid)
+library(ggpubr)
+library(cowplot)
+```
+
+```{r all captures}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+plot_list <- list()
+files <- c("capture1_filter.merged", "capture2_filter.merged", "capture3_filter.merged", "capture4_filter.merged")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+  labs <- c("CDS","Exon","Gene","UTR")
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,50)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    #ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    #theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  plot_list[[length(plot_list)+1]] <- p1
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  print(p1)
+  dev.off()
+}
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2)
+
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_merged.png", pcombined)
+```
+
+```{r Capture_B3, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+files <- c("Capture1_B3", "Capture2_B3", "Capture3_B3", "Capture4_B3")
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+  labs <- c("CDS","Exon","Gene","UTR")
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  plot_list[[length(plot_list)+1]] <- p1
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  print(p1)
+  dev.off()
+}
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture B3 read depth across genome features"))
+
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_B3.png", pcombined)
+```
+
+```{r Capture_B4, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture1_B4", "Capture2_B4", "Capture3_B4", "Capture4_B4")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample)) + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    #geom_segment(aes(x=20, y=0, xend=20, yend=1, color="red"))+
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture B4 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_B4.png", pcombined)
+```
+
+```{r Capture_G3, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture1_G3", "Capture2_G3", "Capture3_G3", "Capture4_G3")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture B4 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_G3.png", pcombined)
+```
+
+```{r Capture_G5, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture1_G5", "Capture2_G5", "Capture3_G5", "Capture4_G5")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture G4 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_G5.png", pcombined)
+```
+
+```{r Capture_K3, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture1_K3", "Capture2_K3", "Capture3_K3", "Capture4_K3")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture K3 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_K3.png", pcombined)
+```
+
+```{r Capture_K4, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture1_K4", "Capture2_K4", "Capture3_K4", "Capture4_K4")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture B4 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_K4.png", pcombined)
+```
+
+```{r Capture_M3, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture1_M3", "Capture2_M3", "Capture3_M3", "Capture4_M3")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture M3 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_M3.png", pcombined)
+```
+
+```{r Capture_M4, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture1_M4", "Capture2_M4", "Capture3_M4", "Capture4_M4")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture M4 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_M4.png", pcombined)
+```
+
+```{r Capture_N2, echo = FALSE}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture1_N2", "Capture2_N2", "Capture3_N2", "Capture4_N2")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.position="none")
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture N2 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_N2.png", pcombined)
+```
+
+```{r Capture_N1}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/01_genome_region/")
+# initialize an empty list to store ggplot objects
+plot_list <- list()
+
+files <- c("Capture2_N1.hist", "Capture3_N1.hist", "Capture4_N1.hist")
+
+for (file in files) {
+  print(file)
+  files_list <- list.files(pattern=file)
+  print(files_list)
+  
+  files <- c(paste0(file, ".hist.AllCDS.all.split.txt"), paste0(file, ".hist.AllExon.all.split.txt"), paste0(file, ".hist.AllGene.all.split.txt"), paste0(file, ".hist.AllUTR.all.split.txt"))
+  print(files)
+
+  labs <- c("CDS","Exon","Gene","UTR")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+
+  pcbPalette <- c("#009E73" ,"#D55E00","#CC79A7","#56B4E9")
+
+  p1 <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  + xlim(0,15)+
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    #geom_segment(aes(x=20, y=0, xend=20, yend=1, color="red"))+
+    scale_color_manual(values=pcbPalette) +
+    scale_fill_manual(values=pcbPalette) +
+    ggtitle(file)+
+    ylab("% of Bases > Depth")+
+    xlab("Depth")+
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.title = element_blank()) + 
+    theme(legend.position=c(0.50,0.75))
+  
+  plot_list[[length(plot_list)+1]] <- p1
+  
+  png(filename=paste0("Figure2_", file, ".png"), type="cairo",units="px", width=5600, 
+      height=3000, res=600, bg="transparent")
+  
+  print(p1)
+  
+  dev.off()
+
+}
+
+# combine all the ggplot objects in the list using grid.arrange()
+pcombined <- grid.arrange(grobs = plot_list, ncol = 2, top=textGrob("Capture B4 Read Depth across genome"))
+#save the combined plot as PNG file
+ggsave(file="Figure2_allcapture_N1.png", pcombined)
+```

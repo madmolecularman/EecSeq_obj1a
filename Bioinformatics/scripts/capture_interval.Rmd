@@ -1,0 +1,295 @@
+---
+title: "capture_interval"
+author: "Jacob Green"
+date: '2023-03-20'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(root.dir = "/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/03_target_interval")
+```
+
+## R Markdown
+
+```{r Set Libraries and Working Directory}
+library(ggplot2)
+library(grid)
+library(plyr)
+library(dplyr)
+library(scales)
+library(zoo)
+```
+
+```{r Figure 4}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/03_target_interval")
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+make_graph <- function(j){
+  print(files <- list.files(pattern=paste(j,"_filter.merged.hist.*EiRc5.150*", sep = "")))
+  labs <- c("On target","Near target", "Off target")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+  
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+  
+  print(files <- list.files(pattern=paste(j,"_filter.merged.hist.*EiRc10.150*", sep = "")))
+  cov2 <- list()
+  for (i in 1:length(files)) {
+    cov2[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul2=1-cumsum(cov2[[i]][,2])
+    cov2[[i]]$cov_cumul <- c(1,cov_cumul2[-length(cov_cumul2)])
+    cov2[[i]]$sample=labs[i]
+  }
+  cov2_df=do.call("rbind",cov2)
+  names(cov2_df)[1:2]=c("depth","fraction")
+  
+  print(files <- list.files(pattern=paste(j,"_filter.merged.hist.*EiRc15.150*", sep = "")))
+  cov3 <- list()
+  for (i in 1:length(files)) {
+    cov3[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul3=1-cumsum(cov3[[i]][,2])
+    cov3[[i]]$cov_cumul <- c(1,cov_cumul3[-length(cov_cumul3)])
+    cov3[[i]]$sample=labs[i]
+  }
+  cov3_df=do.call("rbind",cov3)
+  names(cov3_df)[1:2]=c("depth","fraction")
+  
+  cov_df <- subset(cov_df, depth <51)
+  cov2_df <- subset(cov2_df, depth <51)
+  cov3_df <- subset(cov3_df, depth <51)
+  
+  cov2_df$high <-cov3_df$cov_cumul
+  
+  cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7")
+  cbPalettep <- c("#0072B2", "#009E73","#D55E00" )
+  
+  cov_df$sample <- factor(cov_df$sample,levels=c("On target","Near target", "Off target"))
+  cov2_df$sample <- factor(cov2_df$sample,levels=c("On target","Near target", "Off target"))
+  
+  p <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  +
+    #xlim(0,200)+
+    geom_ribbon(data=cov2_df,aes(ymin=cov_cumul,ymax=high, color=sample, fill=sample, alpha=0.4)) +
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=cbPalettep) +
+    scale_fill_manual(values=cbPalettep) +
+    ylab("% of Target Bases > Depth")+
+    #scale_x_log10()+
+    xlab("Depth")+
+    ggtitle(eval(j)) +
+    theme_bw() +
+    theme(plot.title = element_text(size = 10, face = "bold",hjust = 0.5)) +
+    theme(legend.title = element_blank()) +
+    theme(legend.position="none")
+  #theme(legend.position=c(0.92,0.88))
+  
+  return(p)
+}
+
+sample_names=c("capture1","capture2","capture3","capture4")
+
+
+Capture1 <- make_graph(sample_names[1])
+
+Capture2 <- make_graph(sample_names[2])
+Capture2 <- Capture2 + theme(axis.title.y=element_text(color="transparent"))
+
+
+Capture3 <- make_graph(sample_names[3])
+Capture3 <- Capture3 + theme(axis.title.y=element_text(color="transparent"))
+
+
+Capture4 <- make_graph(sample_names[4])
+Capture4 <- Capture4 + theme(axis.title.y=element_text(color="transparent"))
+
+
+pdf(file="Figure4.pdf",width=14, height=6.5, bg="transparent")
+multiplot(Capture1,Capture3,Capture2,Capture4, cols=2)
+
+dev.off()
+
+pdf(file="Figure4Legend.pdf",width=14, height=6.5, bg="transparent")
+
+Capture4 <- Capture4 + theme(legend.position="bottom")
+Capture4
+dev.off()
+```
+
+```{r }
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/03_target_interval")
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+make_graph <- function(j){
+  print(files <- list.files(pattern=paste(j,"_filter.merged.hist.*EiRc5.300*", sep = "")))
+  labs <- c("On target","Near target", "Off target")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+  
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+  
+  print(files <- list.files(pattern=paste(j,"_filter.merged.hist.*EiRc10.300*", sep = "")))
+  cov2 <- list()
+  for (i in 1:length(files)) {
+    cov2[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul2=1-cumsum(cov2[[i]][,2])
+    cov2[[i]]$cov_cumul <- c(1,cov_cumul2[-length(cov_cumul2)])
+    cov2[[i]]$sample=labs[i]
+  }
+  cov2_df=do.call("rbind",cov2)
+  names(cov2_df)[1:2]=c("depth","fraction")
+  
+  print(files <- list.files(pattern=paste(j,"_filter.merged.hist.*EiRc15.300*", sep = "")))
+  cov3 <- list()
+  for (i in 1:length(files)) {
+    cov3[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul3=1-cumsum(cov3[[i]][,2])
+    cov3[[i]]$cov_cumul <- c(1,cov_cumul3[-length(cov_cumul3)])
+    cov3[[i]]$sample=labs[i]
+  }
+  cov3_df=do.call("rbind",cov3)
+  names(cov3_df)[1:2]=c("depth","fraction")
+  
+  cov_df <- subset(cov_df, depth <51)
+  cov2_df <- subset(cov2_df, depth <51)
+  cov3_df <- subset(cov3_df, depth <51)
+  
+  cov2_df$high <-cov3_df$cov_cumul
+  
+  cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7")
+  cbPalettep <- c("#0072B2", "#009E73","#D55E00" )
+  
+  cov_df$sample <- factor(cov_df$sample,levels=c("On target","Near target", "Off target"))
+  cov2_df$sample <- factor(cov2_df$sample,levels=c("On target","Near target", "Off target"))
+  
+  p <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  +
+    #xlim(0,200)+
+    geom_ribbon(data=cov2_df,aes(ymin=cov_cumul,ymax=high, color=sample, fill=sample, alpha=0.4)) +
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=cbPalettep) +
+    scale_fill_manual(values=cbPalettep) +
+    ylab("% of Target Bases > Depth")+
+    #scale_x_log10()+
+    xlab("Depth")+
+    ggtitle(eval(j)) +
+    theme_bw() +
+    theme(plot.title = element_text(size = 10, face = "bold",hjust = 0.5)) +
+    theme(legend.title = element_blank()) +
+    theme(legend.position="none")
+  #theme(legend.position=c(0.92,0.88))
+  
+  return(p)
+}
+
+sample_names=c("capture1","capture2","capture3","capture4")
+
+
+Capture1 <- make_graph(sample_names[1])
+
+Capture2 <- make_graph(sample_names[2])
+Capture2 <- Capture2 + theme(axis.title.y=element_text(color="transparent"))
+
+
+Capture3 <- make_graph(sample_names[3])
+Capture3 <- Capture3 + theme(axis.title.y=element_text(color="transparent"))
+
+
+Capture4 <- make_graph(sample_names[4])
+Capture4 <- Capture4 + theme(axis.title.y=element_text(color="transparent"))
+
+
+pdf(file="Figure4_300bp.pdf",width=14, height=6.5, bg="transparent")
+multiplot(Capture1,Capture3,Capture2,Capture4, cols=2)
+
+dev.off()
+
+pdf(file="Figure4Legend.pdf",width=14, height=6.5, bg="transparent")
+
+Capture4 <- Capture4 + theme(legend.position="bottom")
+Capture4
+dev.off()
+```
