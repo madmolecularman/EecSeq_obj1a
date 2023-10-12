@@ -1,0 +1,8 @@
+Targets	capture1_filter.merged	capture2_filter.merged	capture3_filter.merged	capture4_filter.merged
+All Exons	95.5%	95.3%	91.7%	95.9%
+5XR Exons	100.0%	100.0%	100.0%	100.0%
+10XR Exons	100.0%	100.0%	100.0%	100.0%
+15XR Exons	100.0%	100.0%	100.0%	100.0%
+20XR Exons	100.0%	100.0%	100.0%	100.0%
+35XR Exons	100.0%	100.0%	100.0%	100.0%
+50XR Exons	100.0%	100.0%	100.0%	100.0%

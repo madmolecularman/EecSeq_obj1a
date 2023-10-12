@@ -1,0 +1,5 @@
+Pool    %_in_Exons	%_Near_Exons    %Off_Target_Exons   %_on_Target5X   %_Near_Target5X %Off_Target5X   %_on_Target10X	%_Near_Target10X    %Off_Target10X  %_on_Target15X  %_Near_Target15X    %Off_Target15X
+capture1	44.1%	9.1%	46.8%		43.5%	8.7%	47.8%		43.3%	8.6%	48.1%		43.0%	8.5%	48.5%	
+capture2	41.4%	8.5%	50.1%		40.8%	8.1%	51.1%		40.7%	8.0%	51.3%		40.4%	7.8%	51.8%	
+capture3	41.8%	6.8%	51.4%		41.2%	6.4%	52.4%		41.1%	6.4%	52.6%		40.8%	6.2%	52.9%	
+capture4	39.6%	9.3%	51.1%		39.1%	9.0%	52.0%		38.9%	8.8%	52.3%		38.5%	8.7%	52.8%	

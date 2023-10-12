@@ -1,0 +1,40 @@
+ Capture1_N2 , Number of alignment reads: 5156845
+ Capture1_B3 , Number of alignment reads: 3212254
+ Capture1_B4 , Number of alignment reads: 2209921
+ Capture1_G3 , Number of alignment reads: 3819670
+ Capture1_G5 , Number of alignment reads: 4234324
+ Capture1_K3 , Number of alignment reads: 2495009
+ Capture1_K4 , Number of alignment reads: 3980974
+ Capture1_M3 , Number of alignment reads: 7274729
+ Capture1_M4 , Number of alignment reads: 3577567
+ Capture1_N2 , Number of alignment reads: 5156845
+ Capture2_B3 , Number of alignment reads: 3386656
+ Capture2_B4 , Number of alignment reads: 2761467
+ Capture2_G3 , Number of alignment reads: 6678716
+ Capture2_G5 , Number of alignment reads: 3974306
+ Capture2_K3 , Number of alignment reads: 3408284
+ Capture2_K4 , Number of alignment reads: 4440786
+ Capture2_M3 , Number of alignment reads: 5224487
+ Capture2_M4 , Number of alignment reads: 3801520
+ Capture2_N1 , Number of alignment reads: 
+ Capture2_N2 , Number of alignment reads: 6126059
+ Capture3_B3 , Number of alignment reads: 940933
+ Capture3_B4 , Number of alignment reads: 2333663
+ Capture3_G3 , Number of alignment reads: 3285182
+ Capture3_G5 , Number of alignment reads: 3189749
+ Capture3_K3 , Number of alignment reads: 3238854
+ Capture3_K4 , Number of alignment reads: 3634058
+ Capture3_M3 , Number of alignment reads: 5532313
+ Capture3_M4 , Number of alignment reads: 3324160
+ Capture3_N1 , Number of alignment reads: 
+ Capture3_N2 , Number of alignment reads: 3322535
+ Capture4_B3 , Number of alignment reads: 2116554
+ Capture4_B4 , Number of alignment reads: 3174662
+ Capture4_G3 , Number of alignment reads: 2003468
+ Capture4_G5 , Number of alignment reads: 3548595
+ Capture4_K3 , Number of alignment reads: 4787009
+ Capture4_K4 , Number of alignment reads: 6160135
+ Capture4_M3 , Number of alignment reads: 4032033
+ Capture4_M4 , Number of alignment reads: 6735390
+ Capture4_N1 , Number of alignment reads: 
+ Capture4_N2 , Number of alignment reads: 5316081

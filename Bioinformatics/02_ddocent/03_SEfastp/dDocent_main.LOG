@@ -1,0 +1,48 @@
+
+dDocent version 3.0.0 started Mon Sep 18 15:28:04 EDT 2023 
+
+At this point, all configuration information has been entered and dDocent may take several hours to run.
+It is recommended that you move this script to a background operation and disable terminal input and output.
+All data and logfiles will still be recorded.
+To do this:
+Press control and Z simultaneously
+Type 'bg' without the quotes and press enter
+Type 'disown -h' again without the quotes and press enter
+
+Now sit back, relax, and wait for your analysis to finish
+
+Trimming reads
+
+dDocent version 3.0.0 started Mon Sep 18 15:37:23 EDT 2023 
+
+0 individuals are detected. Is this correct? Enter yes or no and press [ENTER]
+Please double check that all fastq files are named PopA_001.F.fq.gz and PopA_001.R.fq.gz
+
+dDocent version 3.0.0 started Mon Sep 18 15:41:11 EDT 2023 
+
+At this point, all configuration information has been entered and dDocent may take several hours to run.
+It is recommended that you move this script to a background operation and disable terminal input and output.
+All data and logfiles will still be recorded.
+To do this:
+Press control and Z simultaneously
+Type 'bg' without the quotes and press enter
+Type 'disown -h' again without the quotes and press enter
+
+Now sit back, relax, and wait for your analysis to finish
+
+Trimming reads
+
+Using BWA to map reads
+
+Creating alignment intervals
+
+dDocent has finished with an analysis in /home/jgreen/eager_obj1a/02_ddocent/03_SEfastp 
+
+dDocent started Mon Sep 18 15:41:11 EDT 2023 
+
+dDocent finished Mon Sep 18 17:37:02 EDT 2023 
+
+ 
+
+dDocent 3.0.0 
+The 'd' is silent, hillbilly.

@@ -1,0 +1,75 @@
+
+dDocent version 3.0.0 started Fri Sep 15 14:35:31 EDT 2023 
+
+At this point, all configuration information has been entered and dDocent may take several hours to run.
+It is recommended that you move this script to a background operation and disable terminal input and output.
+All data and logfiles will still be recorded.
+To do this:
+Press control and Z simultaneously
+Type 'bg' without the quotes and press enter
+Type 'disown -h' again without the quotes and press enter
+
+Now sit back, relax, and wait for your analysis to finish
+
+Using BWA to map reads
+dDocent cannot locate trimmed reads files
+Please rerun dDocent with quality trimming
+
+dDocent version 3.0.0 started Fri Sep 15 14:37:29 EDT 2023 
+
+At this point, all configuration information has been entered and dDocent may take several hours to run.
+It is recommended that you move this script to a background operation and disable terminal input and output.
+All data and logfiles will still be recorded.
+To do this:
+Press control and Z simultaneously
+Type 'bg' without the quotes and press enter
+Type 'disown -h' again without the quotes and press enter
+
+Now sit back, relax, and wait for your analysis to finish
+
+Using BWA to map reads
+dDocent cannot locate trimmed reads files
+Please rerun dDocent with quality trimming
+
+dDocent version 3.0.0 started Mon Sep 18 15:22:34 EDT 2023 
+
+At this point, all configuration information has been entered and dDocent may take several hours to run.
+It is recommended that you move this script to a background operation and disable terminal input and output.
+All data and logfiles will still be recorded.
+To do this:
+Press control and Z simultaneously
+Type 'bg' without the quotes and press enter
+Type 'disown -h' again without the quotes and press enter
+
+Now sit back, relax, and wait for your analysis to finish
+
+Trimming reads
+
+dDocent version 3.0.0 started Mon Sep 18 15:25:32 EDT 2023 
+
+At this point, all configuration information has been entered and dDocent may take several hours to run.
+It is recommended that you move this script to a background operation and disable terminal input and output.
+All data and logfiles will still be recorded.
+To do this:
+Press control and Z simultaneously
+Type 'bg' without the quotes and press enter
+Type 'disown -h' again without the quotes and press enter
+
+Now sit back, relax, and wait for your analysis to finish
+
+Trimming reads
+
+Using BWA to map reads
+
+Creating alignment intervals
+
+dDocent has finished with an analysis in /home/jgreen/eager_obj1a/02_ddocent/02_PEfastp 
+
+dDocent started Mon Sep 18 15:25:32 EDT 2023 
+
+dDocent finished Mon Sep 18 16:59:58 EDT 2023 
+
+ 
+
+dDocent 3.0.0 
+The 'd' is silent, hillbilly.
