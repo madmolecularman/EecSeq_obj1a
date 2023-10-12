@@ -1,0 +1,108 @@
+---
+title: "Exon class size"
+author: "Jacob Green"
+date: '2023-03-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(root.dir = "/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_insert_norm")
+```
+
+## R Markdown
+
+```{r Set Libraries and Working Directory}
+library(tidyverse)
+library(ggplot2)
+library(ggsignif)
+```
+
+```{r Load and sumamrize data}
+data <- read.csv("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_insert_norm/Spec.Table.csv")
+
+# Split the Sample column into Capture and Sample
+data <- data %>%
+  separate(Sample, into = c("Capture", "Sample"), sep = "_")
+
+# Summary statistics
+summary <- summary(data)
+
+# ANOVA
+anova_result <- aov(Percent_in_Exons ~ Capture, data = data)
+
+# Print summary statistics
+print(summary)
+
+# Print ANOVA results
+print(summary(anova_result))
+```
+
+```{r Create boxplots}
+# Create a box plot with larger facets
+boxplot_data <- data %>%
+  gather(key = "Variable", value = "Value", -Capture, -Sample)
+
+# Define the desired order of variables
+desired_order <- c(
+  "Percent_in_Exons", "Percent_Near_Exons", "PercentOff_Target_Exons",
+  "Percent_on_Target2X", "Percent_Near_Target2X", "PercentOff_Target2X",
+  "Percent_on_Target7X", "Percent_Near_Target7X", "PercentOff_Target7X",
+  "Percent_on_Target12X", "Percent_Near_Target12X", "PercentOff_Target12X"
+)
+
+# Reorder the levels of the "Variable" factor based on the desired order
+boxplot_data$Variable <- factor(boxplot_data$Variable, levels = desired_order)
+
+boxplot_plot <- boxplot_data %>%
+  ggplot(aes(x = Capture, y = Value, fill = Capture)) +
+  geom_boxplot() +
+  facet_wrap(~ Variable, scales = "free", nrow = 4) +
+  labs(title = "Differences Between Capture Targets Across Variables",
+       x = "Capture Type", y = "Value") +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        strip.text = element_text(size = 10, face = "bold"))
+
+# Print the box plot
+print(boxplot_plot)
+
+# Save the plot with the specific order of facets
+save_path <- "/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_insert_norm/"
+ggsave(filename = paste0(save_path, "boxplot_plot.png"), plot = boxplot_plot, width = 12, height = 8)
+```
+
+```{r boxplots with significance}
+# Create a box plot with larger facets
+boxplot_data <- data %>%
+  gather(key = "Variable", value = "Value", -Capture, -Sample)
+
+# Define the desired order of variables
+desired_order <- c(
+  "Percent_in_Exons", "Percent_Near_Exons", "PercentOff_Target_Exons",
+  "Percent_on_Target2X", "Percent_Near_Target2X", "PercentOff_Target2X",
+  "Percent_on_Target7X", "Percent_Near_Target7X", "PercentOff_Target7X",
+  "Percent_on_Target12X", "Percent_Near_Target12X", "PercentOff_Target12X"
+)
+
+# Reorder the levels of the "Variable" factor based on the desired order
+boxplot_data$Variable <- factor(boxplot_data$Variable, levels = desired_order)
+
+boxplot_plot <- boxplot_data %>%
+  ggplot(aes(x = Capture, y = Value, fill = Capture)) +
+  geom_boxplot() +
+  facet_wrap(~ Variable, scales = "free", nrow = 4) +
+  labs(title = "Differences Between Capture Targets Across Variables",
+       x = "Capture Type", y = "Value") +
+  geom_signif(comparisons = list(c("Capture1", "Capture2")),
+              map_signif_level = TRUE) +
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        strip.text = element_text(size = 10, face = "bold"))
+
+# Print the box plot
+print(boxplot_plot)
+
+# Save the plot with the specific order of facets
+save_path <- "/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_insert_norm/"
+ggsave(filename = paste0(save_path, "boxplot_plot_withsignif.png"), plot = boxplot_plot, width = 12, height = 8)
+```
