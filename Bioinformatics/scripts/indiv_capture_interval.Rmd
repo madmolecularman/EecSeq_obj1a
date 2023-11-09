@@ -1,0 +1,347 @@
+---
+title: "capture_interval"
+author: "Jacob Green"
+date: '2023-03-20'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(root.dir = "/home/jgreen/eager_obj1a/04_coverage_analysis/03_target_interval/02_indiv/")
+```
+
+## R Markdown
+
+```{r Set Libraries and Working Directory}
+library(ggplot2)
+library(grid)
+library(plyr)
+library(dplyr)
+library(scales)
+library(zoo)
+```
+
+```{r Set functions for figure4 150 bp intervals}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/03_target_interval/02_indiv/")
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+make_graph <- function(j){
+  print(files <- list.files(pattern=paste(j,".hist.*EiRc2.150*", sep = "")))
+  labs <- c("On target","Near target", "Off target")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+  
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+  
+  print(files <- list.files(pattern=paste(j,".hist.*EiRc7.150*", sep = "")))
+  cov2 <- list()
+  for (i in 1:length(files)) {
+    cov2[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul2=1-cumsum(cov2[[i]][,2])
+    cov2[[i]]$cov_cumul <- c(1,cov_cumul2[-length(cov_cumul2)])
+    cov2[[i]]$sample=labs[i]
+  }
+  cov2_df=do.call("rbind",cov2)
+  names(cov2_df)[1:2]=c("depth","fraction")
+  
+  print(files <- list.files(pattern=paste(j,".hist.*EiRc12.150*", sep = "")))
+  cov3 <- list()
+  for (i in 1:length(files)) {
+    cov3[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul3=1-cumsum(cov3[[i]][,2])
+    cov3[[i]]$cov_cumul <- c(1,cov_cumul3[-length(cov_cumul3)])
+    cov3[[i]]$sample=labs[i]
+  }
+  cov3_df=do.call("rbind",cov3)
+  names(cov3_df)[1:2]=c("depth","fraction")
+  
+  cov_df <- subset(cov_df, depth <51)
+  cov2_df <- subset(cov2_df, depth <51)
+  cov3_df <- subset(cov3_df, depth <51)
+  
+  cov2_df$high <-cov3_df$cov_cumul
+  
+  cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7")
+  cbPalettep <- c("#0072B2", "#009E73","#D55E00" )
+  
+  cov_df$sample <- factor(cov_df$sample,levels=c("On target","Near target", "Off target"))
+  cov2_df$sample <- factor(cov2_df$sample,levels=c("On target","Near target", "Off target"))
+  
+  p <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  +
+    xlim(0,8)+
+    geom_ribbon(data=cov2_df,aes(ymin=cov_cumul,ymax=high, color=sample, fill=sample, alpha=0.4)) +
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=cbPalettep) +
+    scale_fill_manual(values=cbPalettep) +
+    ylab("% of Target Bases > Depth")+
+    #scale_x_log10()+
+    xlab("Depth")+
+    ggtitle(eval(j)) +
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.title = element_blank()) +
+    theme(legend.position="none")
+  #theme(legend.position=c(0.92,0.88))
+  
+  return(p)
+}
+```
+
+```{r Indiviual file test for B3}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/03_target_interval/02_indiv/")
+sample_names=c("Capture1_B3","Capture2_B3","Capture3_B3","Capture4_B3")
+
+
+Capture1 <- make_graph(sample_names[1])
+
+Capture2 <- make_graph(sample_names[2])
+Capture2 <- Capture2 + theme(axis.title.y=element_text(color="transparent"))
+
+
+Capture3 <- make_graph(sample_names[3])
+Capture3 <- Capture3 + theme(axis.title.y=element_text(color="transparent"))
+
+
+Capture4 <- make_graph(sample_names[4])
+Capture4 <- Capture4 + theme(axis.title.y=element_text(color="transparent"))
+
+
+pdf(file="Figure4_B3.pdf",width=14, height=6.5, bg="transparent")
+multiplot(Capture1,Capture3,Capture2,Capture4, cols=2)
+
+dev.off()
+
+pdf(file="Figure4Legend.pdf",width=14, height=6.5, bg="transparent")
+
+Capture4 <- Capture4 + theme(legend.position="bottom")
+Capture4
+dev.off()
+```
+
+
+```{r Apply function to all 150 bp samples, warning=FALSE}
+sample_names <- c("B3", "B4", "G3", "G5", "K3", "K4", "M3", "M4", "N2")
+
+# Set the working directory
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/03_target_interval/02_indiv/")
+
+# Create an output directory if it doesn't exist
+output_directory <- "image_results"
+if (!file.exists(output_directory)) {
+  dir.create(output_directory)
+}
+
+# Create a function to generate and save the comparison plot for a single sample
+generate_and_save_sample_plot <- function(sample_name) {
+  # Initialize an empty list to store the plots for each capture
+  capture_plots <- list()
+  
+  # Generate the plots for each capture
+  for (capture in c("Capture1", "Capture2", "Capture3", "Capture4")) {
+    current_plot <- make_graph(paste(capture, sample_name, sep = "_"))
+    capture_plots[[capture]] <- current_plot
+  }
+  
+  # Set the PNG file path for saving the plot
+  png_file <- file.path(output_directory, paste("target_interval_150",sample_name, ".png", sep = "_"))
+  
+  # Save the combined plot for the sample in a PNG file
+  png(file =png_file, width = 1400, height = 650, bg = "transparent")  # 2x2 layout
+  multiplot(plotlist = capture_plots, cols = 2)
+  dev.off()
+}
+
+# Generate and save the combined plot for each sample
+for (sample_name in sample_names) {
+  generate_and_save_sample_plot(sample_name)
+}
+```
+
+```{r Set functions for figure4 300 bp intervals}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/03_target_interval/02_indiv/")
+
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+
+make_graph <- function(j){
+  print(files <- list.files(pattern=paste(j,".hist.*EiRc2.300*", sep = "")))
+  labs <- c("On target","Near target", "Off target")
+  
+  cov <- list()
+  for (i in 1:length(files)) {
+    cov[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul=1-cumsum(cov[[i]][,2])
+    cov[[i]]$cov_cumul <- c(1,cov_cumul[-length(cov_cumul)])
+    cov[[i]]$sample=labs[i]
+  }
+  
+  cov_df=do.call("rbind",cov)
+  names(cov_df)[1:2]=c("depth","fraction")
+  
+  print(files <- list.files(pattern=paste(j,".hist.*EiRc7.300*", sep = "")))
+  cov2 <- list()
+  for (i in 1:length(files)) {
+    cov2[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul2=1-cumsum(cov2[[i]][,2])
+    cov2[[i]]$cov_cumul <- c(1,cov_cumul2[-length(cov_cumul2)])
+    cov2[[i]]$sample=labs[i]
+  }
+  cov2_df=do.call("rbind",cov2)
+  names(cov2_df)[1:2]=c("depth","fraction")
+  
+  print(files <- list.files(pattern=paste(j,".hist.*EiRc12.300*", sep = "")))
+  cov3 <- list()
+  for (i in 1:length(files)) {
+    cov3[[i]] <- read.table(files[i])[,c(2,5)]
+    cov_cumul3=1-cumsum(cov3[[i]][,2])
+    cov3[[i]]$cov_cumul <- c(1,cov_cumul3[-length(cov_cumul3)])
+    cov3[[i]]$sample=labs[i]
+  }
+  cov3_df=do.call("rbind",cov3)
+  names(cov3_df)[1:2]=c("depth","fraction")
+  
+  cov_df <- subset(cov_df, depth <51)
+  cov2_df <- subset(cov2_df, depth <51)
+  cov3_df <- subset(cov3_df, depth <51)
+  
+  cov2_df$high <-cov3_df$cov_cumul
+  
+  cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7")
+  cbPalettep <- c("#0072B2", "#009E73","#D55E00" )
+  
+  cov_df$sample <- factor(cov_df$sample,levels=c("On target","Near target", "Off target"))
+  cov2_df$sample <- factor(cov2_df$sample,levels=c("On target","Near target", "Off target"))
+  
+  p <- ggplot(cov_df, aes(x= depth, y=cov_cumul, color=sample))  +
+    xlim(0,8)+
+    geom_ribbon(data=cov2_df,aes(ymin=cov_cumul,ymax=high, color=sample, fill=sample, alpha=0.4)) +
+    scale_alpha(guide = 'none') +
+    geom_line(size=1.5)+ 
+    scale_color_manual(values=cbPalettep) +
+    scale_fill_manual(values=cbPalettep) +
+    ylab("% of Target Bases > Depth")+
+    #scale_x_log10()+
+    xlab("Depth")+
+    ggtitle(eval(j)) +
+    theme_bw() +
+    theme(plot.title = element_text(size = 12, face = "bold",hjust = 0.5)) +
+    theme(legend.title = element_blank()) +
+    theme(legend.position="none")
+  #theme(legend.position=c(0.92,0.88))
+  
+  return(p)
+}
+```
+
+```{r Apply function to all 300 bp samples}
+sample_names <- c("B3", "B4", "G3", "G5", "K3", "K4", "M3", "M4", "N2")
+
+# Set the working directory
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/03_target_interval/02_indiv/")
+
+# Create an output directory if it doesn't exist
+output_directory <- "image_results"
+if (!file.exists(output_directory)) {
+  dir.create(output_directory)
+}
+
+# Create a function to generate and save the comparison plot for a single sample
+generate_and_save_sample_plot <- function(sample_name) {
+  # Initialize an empty list to store the plots for each capture
+  capture_plots <- list()
+  
+  # Generate the plots for each capture
+  for (capture in c("Capture1", "Capture2", "Capture3", "Capture4")) {
+    current_plot <- make_graph(paste(capture, sample_name, sep = "_"))
+    capture_plots[[capture]] <- current_plot
+  }
+  
+  # Set the PNG file path for saving the plot
+  png_file <- file.path(output_directory, paste("target_interval_300",sample_name, ".png", sep = "_"))
+  
+  # Save the combined plot for the sample in a PNG file
+  png(file =png_file, width = 1400, height = 650, bg = "transparent")  # 2x2 layout
+  multiplot(plotlist = capture_plots, cols = 2)
+  dev.off()
+}
+
+# Generate and save the combined plot for each sample
+for (sample_name in sample_names) {
+  generate_and_save_sample_plot(sample_name)
+}
+```

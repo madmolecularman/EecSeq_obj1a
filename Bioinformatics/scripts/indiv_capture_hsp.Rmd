@@ -1,0 +1,1043 @@
+---
+title: "capture_region"
+author: "Jacob Green"
+date: '2023-03-21'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/')
+```
+
+```{r}
+library(ggplot2)
+library(grid)
+library(plyr)
+library(dplyr)
+library(scales)
+library(zoo)
+```
+
+
+```{r Capture B3}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_B3.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_B3.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_B3.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_B3.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_B3"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_B3"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+#subDepCap2$Depth <- subDepCap2$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+redcol <-"#940000"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_area(aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=cbPalette[4], alpha=0.1, linetype="dotted")+  
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 40, xend = End, yend = 40), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 40, xend = End, yend = 40, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 40, xend = End, yend = 40),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(0,50),labels=c("0","10","25","45"), breaks=c(0,10,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1_B3.Capture2_B3.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+```{r Cap1 Cap3}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_B3.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_B3.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_B3.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_B3.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_B3"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_B3"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+#subDepCap2$Depth <- subDepCap2$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+redcol <-"#940000"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_area(aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=cbPalette[4], alpha=0.1, linetype="dotted")+  
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 40, xend = End, yend = 40), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 40, xend = End, yend = 40, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 40, xend = End, yend = 40),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(0,50),labels=c("0","10","25","45"), breaks=c(0,10,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1_B3.Capture3_B3.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+```{r Cap1 Cap4}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_B3.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_B3.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_B3.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_B3.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_B3"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_B3"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+#subDepCap2$Depth <- subDepCap2$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+redcol <-"#940000"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_area(aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=cbPalette[4], alpha=0.1, linetype="dotted")+  
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 40, xend = End, yend = 40), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 40, xend = End, yend = 40, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 40, xend = End, yend = 40),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(0,50),labels=c("0","10","25","45"), breaks=c(0,10,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1_B3.Capture4_B3.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+dev.off()
+```
+
+```{r All Captures B3}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_B3.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_B3.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_B3.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_B3.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_B3"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_B3"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_B3"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_B3"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 50, xend = End, yend = 50), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 50, xend = End, yend = 50, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 50, xend = End, yend = 50),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-60,60),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_B3.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+```{r All Captures B4}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_B4.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_B4.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_B4.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_B4.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_B4"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_B4"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_B4"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_B4"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 50, xend = End, yend = 50), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 50, xend = End, yend = 50, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 50, xend = End, yend = 50),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-60,60),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_B4.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+```{r All Captures G3}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B3E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_G3.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_G3.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_G3.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_G3.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_G3"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_G3"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_G3"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_G3"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 50, xend = End, yend = 50), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 50, xend = End, yend = 50, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 50, xend = End, yend = 50),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-60,60),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_G3.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+```{r All Captures G5}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B3E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_G5.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_G5.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_G5.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_G5.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_G5"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_G5"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_G5"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_G5"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 50, xend = End, yend = 50), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 50, xend = End, yend = 50, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 50, xend = End, yend = 50),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-60,60),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_G5.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+```{r All Captures K3}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B3E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_K3.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_K3.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_K3.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_K3.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_K3"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_K3"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_K3"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_K3"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 50, xend = End, yend = 50), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 50, xend = End, yend = 50, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 50, xend = End, yend = 50),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-60,60),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_K3.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+
+```{r All Captures K4}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B3E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_K4.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_K4.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_K4.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_K4.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_K4"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_K4"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_K4"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_K4"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 50, xend = End, yend = 50), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 50, xend = End, yend = 50, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 50, xend = End, yend = 50),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-60,60),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_K4.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+```{r All Captures M3}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B3E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_M3.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_M3.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_M3.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_M3.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_M3"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_M3"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_M3"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_M3"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 65, xend = End, yend = 65), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 65, xend = End, yend = 65, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 65, xend = End, yend = 65),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-80,80),labels=c("75","50","25","0","25","50","75"), breaks=c(-75,-50,-25,0,25,50,75),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_M3.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+
+```{r All Captures M4}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B3E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_M4.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_M4.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_M4.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_M4.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_M4"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_M4"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_M4"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_M4"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 50, xend = End, yend = 50), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 50, xend = End, yend = 50, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 50, xend = End, yend = 50),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-60,60),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_M4.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+
+```{r All Captures N2}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+cbPalette <- c("#D55E00", "#009E73", "#56B3E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+DepCap1 <- read.table("TotalCovCapture1_N2.indiv.txt", header = TRUE)
+DepCap2 <- read.table("TotalCovCapture2_N2.indiv.txt", header = TRUE)
+DepCap3 <- read.table("TotalCovCapture3_N2.indiv.txt", header = TRUE)
+DepCap4 <- read.table("TotalCovCapture4_N2.indiv.txt", header = TRUE)
+
+
+DepCap1 <- as.data.frame(DepCap1)
+DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_N2"))
+DepCap2 <- as.data.frame(DepCap2)
+DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_N2"))
+DepCap3 <- as.data.frame(DepCap3)
+DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_N2"))
+DepCap4 <- as.data.frame(DepCap4)
+DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_N2"))
+
+exons <- read.table("exon.list", header = TRUE, sep = "\t")
+exons <- as.data.frame(exons)
+
+genes <- read.table("genes.list", header = TRUE, sep = "\t")
+genes <- as.data.frame(genes)
+
+cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+cds <- as.data.frame(cds)
+
+subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+subexons <-subset(exons, End <32755205 & End > 32740205)
+subgenes <-subset(genes, End <32800757 & Start < 32754201)
+subcds <-subset(cds, End <32800757 & Start < 32755000)
+subDepCap3$Depth <- subDepCap3$Depth / -1
+subDepCap4$Depth <- subDepCap4$Depth / -1
+submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+subgenes$End[4] <- 32755000
+
+
+pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                cbPalette), col = cbPalette)
+bluecol <- "#56B4E9"
+redcol <-"#940000"
+greencol <-"#009E73"
+purplecol <-"#7570B3"
+
+cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+
+
+dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+  geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+  geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+  geom_area(data=subDepCap1, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=bluecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap3, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=greencol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+  scale_color_manual(values=cbPalettedd) +
+  geom_segment(data=subgenes, aes(x = Start, y = 50, xend = End, yend = 50), size = 6,color=cbPalette[9], alpha=1)+
+  geom_segment(data=subexons,aes(x = Start, y = 50, xend = End, yend = 50, color=Treatment),size = 4, alpha=1) +
+  geom_segment(data=subcds,aes(x = Start, y = 50, xend = End, yend = 50),size = 1, color="grey90", alpha=1) +
+  theme_bw()+
+  coord_cartesian(xlim = c(32740000,32755000))+
+  xlim(32740000,32755000) +
+  scale_y_continuous(limits=c(-60,60),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+  theme(legend.position="none")
+
+png(filename="/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/image_results/Figure7.Capture1234_N2.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+dd
+dev.off()
+```
+
+```{r All samples}
+sample_list <- c("B3", "B4", "G3", "G5", "K3", "K4", "M3", "M4", "N2")
+
+# Loop through each sample in the sample list
+for (sample in sample_list) {
+    setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/04_specificity/02_indiv/")
+    
+    # Read data for each capture of the current sample
+    captures_data <- list()
+    for (capture in 1:4) {
+        file_name <- paste("TotalCovCapture", capture, "_", sample, ".indiv.txt", sep = "")
+        captures_data[[capture]] <- read.table(file_name, header = TRUE)
+        captures_data[[capture]] <- as.data.frame(captures_data[[capture]])
+        captures_data[[capture]]$Sample <- factor(captures_data[[capture]]$Sample, levels = paste("Capture", capture, "_", sample))
+    }
+
+    cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+    DepCap1 <- read.table("TotalCovCapture1_B3.indiv.txt", header = TRUE)
+    DepCap2 <- read.table("TotalCovCapture2_B3.indiv.txt", header = TRUE)
+    DepCap3 <- read.table("TotalCovCapture3_B3.indiv.txt", header = TRUE)
+    DepCap4 <- read.table("TotalCovCapture4_B3.indiv.txt", header = TRUE)
+    
+    
+    DepCap1 <- as.data.frame(DepCap1)
+    DepCap1$Sample <- factor(DepCap1$Sample,levels=c("Capture1_B3"))
+    DepCap2 <- as.data.frame(DepCap2)
+    DepCap2$Sample <- factor(DepCap2$Sample,levels=c("Capture2_B3"))
+    DepCap3 <- as.data.frame(DepCap3)
+    DepCap3$Sample <- factor(DepCap3$Sample,levels=c("Capture3_B3"))
+    DepCap4 <- as.data.frame(DepCap4)
+    DepCap4$Sample <- factor(DepCap4$Sample,levels=c("Capture4_B3"))
+    
+    exons <- read.table("exon.list", header = TRUE, sep = "\t")
+    exons <- as.data.frame(exons)
+    
+    genes <- read.table("genes.list", header = TRUE, sep = "\t")
+    genes <- as.data.frame(genes)
+    
+    cds <- read.table("CDS.list", header = TRUE, sep = "\t")
+    cds <- as.data.frame(cds)
+    
+    subDepCap1 <-subset(DepCap1, bp <32755000 & bp > 32739000)
+    subDepCap2 <-subset(DepCap2, bp <32755000 & bp > 32739000)
+    subDepCap3 <-subset(DepCap3, bp <32755000 & bp > 32739000)
+    subDepCap4 <-subset(DepCap4, bp <32755000 & bp > 32739000)
+    subexons <-subset(exons, End <32755205 & End > 32740205)
+    subgenes <-subset(genes, End <32800757 & Start < 32754201)
+    subcds <-subset(cds, End <32800757 & Start < 32755000)
+    subDepCap2$Depth <- subDepCap2$Depth / -1
+    subDepCap4$Depth <- subDepCap4$Depth / -1
+    submeanCap1.cov <- ddply(subDepCap1, .(Contig,bp), summarize,  Depth=mean(Depth))
+    submeanCap2.cov <- ddply(subDepCap2, .(Contig,bp), summarize,  Depth=mean(Depth))
+    submeanCap3.cov <- ddply(subDepCap3, .(Contig,bp), summarize,  Depth=mean(Depth))
+    submeanCap4.cov <- ddply(subDepCap4, .(Contig,bp), summarize,  Depth=mean(Depth))
+    subgenes$End[4] <- 32755000
+    
+    
+    pie(rep(1, length(cbPalette)), labels = sprintf("%d (%s)", seq_along(cbPalette), 
+                                                    cbPalette), col = cbPalette)
+    redcol <-"#940000"
+    greencol <-"#009E73"
+    purplecol <-"#7570B3"
+    
+    cbPalette <- c("#D55E00", "#009E73", "#56B4E9" ,"#0072B2" ,"#E69F00" ,"#F0E442" ,"#999999" ,"#CC79A7","#7570B3")
+    cbPalettedd <- c( "#009E73","#D55E00", "#E69F00")
+    
+    
+    dd <- ggplot(subDepC, aes(x= bp, y=Depth)) +
+      geom_area(aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=cbPalette[4], alpha=0.1, linetype="dotted")+  
+      geom_line(data=submeanCap1.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=cbPalette[4], size =1.0, alpha=0.9)  +
+      geom_line(data=submeanCap2.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=redcol, size =1.0, alpha=0.9)  +
+      geom_line(data=submeanCap3.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=greencol, size =1.0, alpha=0.9)  +
+      geom_line(data=submeanCap4.cov,aes(y=rollmean(Depth, 100, na.pad=TRUE)),colour=purplecol, size =1.0, alpha=0.9)  +
+      geom_area(data=subDepCap2, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=redcol, alpha=0.1, linetype="dotted")+
+      scale_color_manual(values=cbPalettedd) +
+      geom_area(data=subDepCap4, aes(group=Sample),position = "identity",color=alpha("grey30",0.25),fill=purplecol, alpha=0.1, linetype="dotted")+
+      scale_color_manual(values=cbPalettedd) +
+      geom_segment(data=subgenes, aes(x = Start, y = 40, xend = End, yend = 40), size = 6,color=cbPalette[9], alpha=1)+
+      geom_segment(data=subexons,aes(x = Start, y = 40, xend = End, yend = 40, color=Treatment),size = 4, alpha=1) +
+      geom_segment(data=subcds,aes(x = Start, y = 40, xend = End, yend = 40),size = 1, color="grey90", alpha=1) +
+      theme_bw()+
+      coord_cartesian(xlim = c(32740000,32755000))+
+      xlim(32740000,32755000) +
+      scale_y_continuous(limits=c(-50,50),labels=c("45","25","0","25","45"), breaks=c(-45,-25,0,25,45),expand=c(0.01,0)) +
+      theme(legend.position="none")
+        file_name_plot <- paste("Figure_", sample, ".png", sep = "")
+        png(filename = file_name_plot, width = 800, height = 600)
+        # ... (plot generation logic)
+    dev.off()
+}
+```

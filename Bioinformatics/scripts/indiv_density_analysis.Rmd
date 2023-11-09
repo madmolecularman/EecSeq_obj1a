@@ -1,0 +1,555 @@
+---
+title: "Exon class size"
+author: "Jacob Green"
+date: '2023-03-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(root.dir = "/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/")
+```
+
+## R Markdown
+
+```{r Set Libraries and Working Directory}
+library(MASS)
+library(fields)
+library(ggplot2)
+library(grid)
+library(plyr)
+library(dplyr)
+library(scales)
+library(zoo)
+```
+
+```{r Make data frames}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/")
+df1 <- read.table("Capture1_B3.indiv.ExonMeanCoverage.txt", header = TRUE)
+df1 <-as.data.frame(df1)
+df2 <- read.table("Capture2_B3.indiv.ExonMeanCoverage.txt", header = TRUE)
+df2 <-as.data.frame(df2)
+df3 <- read.table("Capture3_B3.indiv.ExonMeanCoverage.txt", header = TRUE)
+df3 <-as.data.frame(df3)
+df4 <- read.table("Capture4_B3.indiv.ExonMeanCoverage.txt", header = TRUE)
+df4 <-as.data.frame(df4)
+#df5 <- read.table("all.merged.ExonMeanCoverage.txt", header = TRUE)
+#df5 <-as.data.frame(df5)
+```
+
+```{r Merge11}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/")
+merged_cap11df <- merge(df1, df1[, c("Start","DNA_Coverage", "Exon_Size_Class")],by = "Start")
+TotalExon <- merged_cap11df[merged_cap11df$DNA_Coverage.x != 0 & merged_cap11df$DNA_Coverage.y != 0,]
+TotalExon <- TotalExon[, -5]
+
+TotalExon$Exon_Size_Class <-factor(TotalExon$Exon_Size_Class.y, levels=c("Lower","Middle","Upper"))
+
+
+TotalExon$Exon_Size_Class <- revalue(TotalExon$Exon_Size_Class.y, c("Lower"="Lower 10%", "Upper"="Upper 10%", "Middle"="Middle 80%"))
+
+get_density <- function(x, y, n = 100) {
+  dens <- MASS::kde2d(x = x, y = y, n = n)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+TotalExon$density <- get_density(TotalExon$DNA_Coverage.x,TotalExon$DNA_Coverage.y)
+
+cbPalette <- c("#009E73","#D55E00","#56B4E9", "#0072B2","#E69F00", "#F0E442" , "#999999","#CC79A7")
+t <- cbPalette[1]
+cbPalette[1] <- cbPalette[2]
+cbPalette[2] <- t
+
+TotalExon$DNA_Coverage.y <- TotalExon$DNA_Coverage.y/6
+TotalExon$DNA_Coverage.x <- TotalExon$DNA_Coverage.x/6
+
+
+b1 <- bb<- ggplot(TotalExon, aes(x=DNA_Coverage.x+1,y=DNA_Coverage.y+1,alpha = 1/density),fill=Exon_Size_Class,color=Exon_Size_Class) + 
+  geom_point(aes(color=TotalExon$Exon_Size_Class,fill=TotalExon$Exon_Size_Class,shape=TotalExon$Exon_Size_Class)) +
+  geom_smooth(method="auto", alpha = 0.5, size = 0, se=TRUE)+
+  geom_abline(linetype = "dashed", color = "red") +
+  stat_smooth(geom="line", alpha=0.75, size=0.5, linetype="dashed") +
+  scale_alpha_continuous(guide = "none",range = c(.2, .95)) + 
+  scale_shape_manual(values=c(15,16,17), name="Exon Size Percentile") +
+  scale_fill_manual(values=cbPalette , name="Exon Size Percentile")+
+  scale_color_manual(values=cbPalette, name="Exon Size Percentile") +
+  #scale_x_log10(limits=c(1,100),expand=c(0.02,0), breaks = c(0,1,11,90),
+                #labels = c("0","1","10","90"))+
+  #scale_y_log10(limits=c(1,100),expand=c(0.02,0), breaks = c(0,1,11,90),
+                #labels = c("0","1","10","90"))+
+  xlab("Mean (150,150) DNA Reads per Exon Base Pair")+
+  ylab("Mean (150,150) DNA Reads per Exon Base Pair") +
+  theme_bw() +
+  theme(legend.position = c(0.9,0.15))  
+
+png(filename="Figure3_indiv_B3_cap11.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+b1
+dev.off()
+```
+
+# join the two data frames based on the id column
+```{r B3 insert Merge12}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/")
+merged_cap12df <- merge(df1, df2[, c("Start","DNA_Coverage", "Exon_Size_Class")],by = "Start")
+TotalExon <- merged_cap12df[merged_cap12df$DNA_Coverage.x != 0 & merged_cap12df$DNA_Coverage.y != 0,]
+TotalExon <- TotalExon[, -5]
+
+TotalExon$Exon_Size_Class <-factor(TotalExon$Exon_Size_Class.y, levels=c("Lower","Middle","Upper"))
+
+
+TotalExon$Exon_Size_Class <- revalue(TotalExon$Exon_Size_Class.y, c("Lower"="Lower 10%", "Upper"="Upper 10%", "Middle"="Middle 80%"))
+
+get_density <- function(x, y, n = 100) {
+  dens <- MASS::kde2d(x = x, y = y, n = n)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+TotalExon$density <- get_density(TotalExon$DNA_Coverage.x,TotalExon$DNA_Coverage.y)
+
+cbPalette <- c("#009E73","#D55E00","#56B4E9", "#0072B2","#E69F00", "#F0E442" , "#999999","#CC79A7")
+t <- cbPalette[1]
+cbPalette[1] <- cbPalette[2]
+cbPalette[2] <- t
+
+TotalExon$DNA_Coverage.y <- TotalExon$DNA_Coverage.y/6
+TotalExon$DNA_Coverage.x <- TotalExon$DNA_Coverage.x/6
+
+
+b1 <- bb<- ggplot(TotalExon, aes(x=DNA_Coverage.x+1,y=DNA_Coverage.y+1,alpha = 1/density),fill=Exon_Size_Class,color=Exon_Size_Class) + 
+  geom_point(aes(color=TotalExon$Exon_Size_Class,fill=TotalExon$Exon_Size_Class,shape=TotalExon$Exon_Size_Class)) +
+  geom_smooth(method="auto", alpha = 0.5, size = 0, se=TRUE)+
+  geom_abline(linetype = "dashed", color = "red") +
+  stat_smooth(geom="line", alpha=0.75, size=0.5, linetype="dashed") +
+  scale_alpha_continuous(guide = "none",range = c(.2, .95)) + 
+  scale_shape_manual(values=c(15,16,17), name="Exon Size Percentile") +
+  scale_fill_manual(values=cbPalette , name="Exon Size Percentile")+
+  scale_color_manual(values=cbPalette, name="Exon Size Percentile") +
+  #scale_x_log10(limits=c(1,50),expand=c(0.02,0), breaks = c(0,1,11,50),
+                #labels = c("0","1","10","100"))+
+  #scale_y_log10(limits=c(1,50),expand=c(0.02,0), breaks = c(0,1,11,50),
+                #labels = c("0","1","10","100"))+
+  xlab("Mean (150/150) DNA Reads per Exon Base Pair")+
+  ylab("Mean (150/300) DNA Reads per Exon Base Pair") +
+  theme_bw() +
+  theme(legend.position = c(0.9,0.15))  
+
+png(filename="Figure3_indiv_B3_cap12.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+b1
+dev.off()
+```
+
+```{r B3 insert Merge13}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/")
+merged_cap13df <- merge(df1, df3[, c("Start","DNA_Coverage", "Exon_Size_Class")],by = "Start")
+TotalExon <- merged_cap13df[merged_cap13df$DNA_Coverage.x != 0 & merged_cap13df$DNA_Coverage.y != 0,]
+TotalExon <- TotalExon[, -5]
+
+TotalExon$Exon_Size_Class <-factor(TotalExon$Exon_Size_Class.y, levels=c("Lower","Middle","Upper"))
+
+
+TotalExon$Exon_Size_Class <- revalue(TotalExon$Exon_Size_Class.y, c("Lower"="Lower 10%", "Upper"="Upper 10%", "Middle"="Middle 80%"))
+
+get_density <- function(x, y, n = 100) {
+  dens <- MASS::kde2d(x = x, y = y, n = n)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+TotalExon$density <- get_density(TotalExon$DNA_Coverage.x,TotalExon$DNA_Coverage.y)
+
+cbPalette <- c("#009E73","#D55E00","#56B4E9", "#0072B2","#E69F00", "#F0E442" , "#999999","#CC79A7")
+t <- cbPalette[1]
+cbPalette[1] <- cbPalette[2]
+cbPalette[2] <- t
+
+TotalExon$DNA_Coverage.y <- TotalExon$DNA_Coverage.y/6
+TotalExon$DNA_Coverage.x <- TotalExon$DNA_Coverage.x/6
+
+
+b2 <- bb<- ggplot(TotalExon, aes(x=DNA_Coverage.x+1,y=DNA_Coverage.y+1,alpha = 1/density),fill=Exon_Size_Class,color=Exon_Size_Class) + 
+  geom_point(aes(color=TotalExon$Exon_Size_Class,fill=TotalExon$Exon_Size_Class,shape=TotalExon$Exon_Size_Class)) +
+  geom_smooth(method="auto", alpha = 0.5, size = 0, se=TRUE)+
+  geom_abline(linetype = "dashed", color = "red") +
+  stat_smooth(geom="line", alpha=0.75, size=0.5, linetype="dashed") +
+  scale_alpha_continuous(guide = "none",range = c(.2, .95)) + 
+  scale_shape_manual(values=c(15,16,17), name="Exon Size Percentile") +
+  scale_fill_manual(values=cbPalette , name="Exon Size Percentile")+
+  scale_color_manual(values=cbPalette, name="Exon Size Percentile") +
+  #scale_x_log10(limits=c(1,1300),expand=c(0.02,0), breaks = c(0,1,11,101,1001),
+                #labels = c("0","0","10","100","1,000"))+
+  #scale_y_log10(limits=c(1,1800),expand=c(0.02,0), breaks = c(0,1,11,101,1001),
+                #labels = c("0","0","10","100","1,000"))+
+  xlab("Mean (150/150) DNA Reads per Exon Base Pair")+
+  ylab("Mean (300/150) DNA Reads per Exon Base Pair") +
+  theme_bw() +
+  theme(legend.position = c(0.9,0.15))  
+
+png(filename="Figure3_indiv_B3_cap13.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+b2
+dev.off()
+```
+
+```{r B3 insert Merge14}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/")
+merged_cap14df <- merge(df1, df4[, c("Start","DNA_Coverage", "Exon_Size_Class")],by = "Start")
+TotalExon <- merged_cap14df[merged_cap14df$DNA_Coverage.x != 0 & merged_cap14df$DNA_Coverage.y != 0,]
+TotalExon <- TotalExon[, -5]
+
+
+TotalExon$Exon_Size_Class <-factor(TotalExon$Exon_Size_Class.y, levels=c("Lower","Middle","Upper"))
+
+
+TotalExon$Exon_Size_Class <- revalue(TotalExon$Exon_Size_Class.y, c("Lower"="Lower 10%", "Upper"="Upper 10%", "Middle"="Middle 80%"))
+
+get_density <- function(x, y, n = 100) {
+  dens <- MASS::kde2d(x = x, y = y, n = n)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+TotalExon$density <- get_density(TotalExon$DNA_Coverage.x,TotalExon$DNA_Coverage.y)
+
+cbPalette <- c("#009E73","#D55E00","#56B4E9", "#0072B2","#E69F00", "#F0E442" , "#999999","#CC79A7")
+t <- cbPalette[1]
+cbPalette[1] <- cbPalette[2]
+cbPalette[2] <- t
+
+TotalExon$DNA_Coverage.y <- TotalExon$DNA_Coverage.y/6
+TotalExon$DNA_Coverage.x <- TotalExon$DNA_Coverage.x/6
+
+
+b3 <- bb<- ggplot(TotalExon, aes(x=DNA_Coverage.x+1,y=DNA_Coverage.y+1,alpha = 1/density),fill=Exon_Size_Class,color=Exon_Size_Class) + 
+  geom_point(aes(color=TotalExon$Exon_Size_Class,fill=TotalExon$Exon_Size_Class,shape=TotalExon$Exon_Size_Class)) +
+  geom_smooth(method="auto", alpha = 0.5, size = 0, se=TRUE)+
+  geom_abline(linetype = "dashed", color = "red") +
+  stat_smooth(geom="line", alpha=0.75, size=0.5, linetype="dashed") +
+  scale_alpha_continuous(guide = "none",range = c(.2, .95)) + 
+  scale_shape_manual(values=c(15,16,17), name="Exon Size Percentile") +
+  scale_fill_manual(values=cbPalette , name="Exon Size Percentile")+
+  scale_color_manual(values=cbPalette, name="Exon Size Percentile") +
+  #scale_x_log10(limits=c(1,1300),expand=c(0.02,0), breaks = c(0,1,11,101,1001),
+                #labels = c("0","0","10","100","1,000"))+
+  #scale_y_log10(limits=c(1,1800),expand=c(0.02,0), breaks = c(0,1,11,101,1001),
+                #labels = c("0","0","10","100","1,000"))+
+  xlab("Mean (150/150) DNA Reads per Exon Base Pair")+
+  ylab("Mean (300/300) DNA Reads per Exon Base Pair") +
+  theme_bw() +
+  theme(legend.position = c(0.9,0.15))  
+
+png(filename="Figure3_indiv_B3_cap14.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+b3
+dev.off()
+```
+
+```{r B3 insert Merge24}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/")
+merged_cap24df <- merge(df2, df4[, c("Start","DNA_Coverage", "Exon_Size_Class")],by = "Start")
+TotalExon <- merged_cap24df[merged_cap24df$DNA_Coverage.x != 0 & merged_cap24df$DNA_Coverage.y != 0,]
+TotalExon <- TotalExon[, -5]
+
+
+TotalExon$Exon_Size_Class <-factor(TotalExon$Exon_Size_Class.y, levels=c("Lower","Middle","Upper"))
+
+
+TotalExon$Exon_Size_Class <- revalue(TotalExon$Exon_Size_Class.y, c("Lower"="Lower 10%", "Upper"="Upper 10%", "Middle"="Middle 80%"))
+
+get_density <- function(x, y, n = 100) {
+  dens <- MASS::kde2d(x = x, y = y, n = n)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+TotalExon$density <- get_density(TotalExon$DNA_Coverage.x,TotalExon$DNA_Coverage.y)
+
+cbPalette <- c("#009E73","#D55E00","#56B4E9", "#0072B2","#E69F00", "#F0E442" , "#999999","#CC79A7")
+t <- cbPalette[1]
+cbPalette[1] <- cbPalette[2]
+cbPalette[2] <- t
+
+TotalExon$DNA_Coverage.y <- TotalExon$DNA_Coverage.y/6
+TotalExon$DNA_Coverage.x <- TotalExon$DNA_Coverage.x/6
+
+
+b4 <- bb<- ggplot(TotalExon, aes(x=DNA_Coverage.x+1,y=DNA_Coverage.y+1,alpha = 1/density),fill=Exon_Size_Class,color=Exon_Size_Class) + 
+  geom_point(aes(color=TotalExon$Exon_Size_Class,fill=TotalExon$Exon_Size_Class,shape=TotalExon$Exon_Size_Class)) +
+  geom_smooth(method="auto", alpha = 0.5, size = 0, se=TRUE)+
+  geom_abline(linetype = "dashed", color = "red") +
+  stat_smooth(geom="line", alpha=0.75, size=0.5, linetype="dashed") +
+  scale_alpha_continuous(guide = "none",range = c(.2, .95)) + 
+  scale_shape_manual(values=c(15,16,17), name="Exon Size Percentile") +
+  scale_fill_manual(values=cbPalette , name="Exon Size Percentile")+
+  scale_color_manual(values=cbPalette, name="Exon Size Percentile") +
+  #scale_x_log10(limits=c(1,1300),expand=c(0.02,0), breaks = c(0,1,11,101,1001),
+                #labels = c("0","0","10","100","1,000"))+
+  #scale_y_log10(limits=c(1,1800),expand=c(0.02,0), breaks = c(0,1,11,101,1001),
+                #labels = c("0","0","10","100","1,000"))+
+  xlab("Mean (150/300) DNA Reads per Exon Base Pair")+
+  ylab("Mean (300/300) DNA Reads per Exon Base Pair") +
+  theme_bw() +
+  theme(legend.position = c(0.9,0.15))  
+
+png(filename="Figure3_indiv_B3cap24.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+b4
+dev.off() 
+```
+
+```{r}
+setwd("/home/jgreen/EAGER_OBJ1a/04_coverage_analysis/02_exon_stats")
+merged_cap15df <- merge(df1, df2[, c("Start","DNA_Coverage", "Exon_Size_Class")],by = "Start")
+TotalExon <- merged_cap24df[merged_cap15df$DNA_Coverage.x != 0 & merged_cap15df$DNA_Coverage.y != 0,]
+TotalExon <- TotalExon[, -5]
+
+
+TotalExon$Exon_Size_Class <-factor(TotalExon$Exon_Size_Class.y, levels=c("Lower","Middle","Upper"))
+
+
+TotalExon$Exon_Size_Class <- revalue(TotalExon$Exon_Size_Class.y, c("Lower"="Lower 10%", "Upper"="Upper 10%", "Middle"="Middle 80%"))
+
+get_density <- function(x, y, n = 100) {
+  dens <- MASS::kde2d(x = x, y = y, n = n)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
+TotalExon$density <- get_density(TotalExon$DNA_Coverage.x,TotalExon$DNA_Coverage.y)
+
+cbPalette <- c("#009E73","#D55E00","#56B4E9", "#0072B2","#E69F00", "#F0E442" , "#999999","#CC79A7")
+t <- cbPalette[1]
+cbPalette[1] <- cbPalette[2]
+cbPalette[2] <- t
+
+TotalExon$DNA_Coverage.y <- TotalExon$DNA_Coverage.y/6
+TotalExon$DNA_Coverage.x <- TotalExon$DNA_Coverage.x/6
+
+
+b5 <- bb<- ggplot(TotalExon, aes(x=DNA_Coverage.x+1,y=DNA_Coverage.y+1,alpha = 1/density),fill=Exon_Size_Class,color=Exon_Size_Class) + 
+  geom_point(aes(color=TotalExon$Exon_Size_Class,fill=TotalExon$Exon_Size_Class,shape=TotalExon$Exon_Size_Class)) +
+  geom_smooth(method="auto", alpha = 0.5, size = 0, se=TRUE)+
+  stat_smooth(geom="line", alpha=0.75, size=0.5, linetype="dashed") +
+  scale_alpha_continuous(guide = "none",range = c(.2, .95)) + 
+  scale_shape_manual(values=c(15,16,17), name="Exon Size Percentile") +
+  scale_fill_manual(values=cbPalette , name="Exon Size Percentile")+
+  scale_color_manual(values=cbPalette, name="Exon Size Percentile") +
+  scale_x_log10(limits=c(1,1300),expand=c(0.02,0), breaks = c(0,1,11,101,1001),
+                labels = c("0","0","10","100","1,000"))+
+  scale_y_log10(limits=c(1,1800),expand=c(0.02,0), breaks = c(0,1,11,101,1001),
+                labels = c("0","0","10","100","1,000"))+
+  xlab("Mean Capture1 DNA Reads per Exon Base Pair")+
+  ylab("Mean All DNA Reads per Exon Base Pair") +
+  theme_bw() +
+  theme(legend.position = c(0.9,0.15))  
+
+png(filename="Figure3_cap15.png", type="cairo",units="px", width=5600, 
+    height=3000, res=600, bg="transparent")
+b5
+dev.off() 
+```
+
+```{r}
+grid.arrange(b1, b2, b3, ncol = 3)
+```
+
+```{r All density analysis combined with pairwise T-test and ANOVA}
+setwd("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/")
+# Define a list of capture names and sample names
+# Define a list of capture names and sample names
+captures <- c("Capture1", "Capture2", "Capture3", "Capture4")
+samples <- c("B3", "B4", "G3", "G5", "K3", "K4", "M3", "M4", "N2")
+
+# Initialize an empty list to store data frames
+data_frames <- list()
+
+# Directory to store result files
+output_dir <- "/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/stat_results/"
+
+# Create the output directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
+
+# Loop through captures and samples to read data files
+for (capture in captures) {
+  for (sample in samples) {
+    file_name <- paste(capture, "_", sample, ".indiv.ExonMeanCoverage.txt", sep = "")
+    file_path <- file.path("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/", file_name)
+    df <- read.table(file_path, header = TRUE)
+    df <- as.data.frame(df)
+    # Add capture and sample information as columns
+    df$Capture <- capture
+    df$Sample <- sample
+    data_frames[[paste(capture, sample, sep = "_")]] <- df
+  }
+}
+
+# Perform pairwise comparisons between captures for each sample
+for (sample in samples) {
+  # Create an empty list to store comparison results
+  comparison_results <- list()
+  
+  for (capture1 in captures) {
+    for (capture2 in captures) {
+      if (capture1 != capture2) {
+        # Get the data frames for the two captures and the same sample
+        df1 <- data_frames[[paste(capture1, sample, sep = "_")]]
+        df2 <- data_frames[[paste(capture2, sample, sep = "_")]]
+        
+        # Perform a t-test for the DNA_Coverage values between captures
+        t_test_result <- t.test(df1$DNA_Coverage, df2$DNA_Coverage)
+        
+        # Store the comparison result in a list
+        comparison_results[[paste(capture1, "_vs_", capture2, sep = "")]] <- t_test_result
+      }
+    }
+  }
+  
+  # Create a file to store t-test results for this sample
+  t_test_output_file <- file.path(output_dir, paste("t_test_results_", sample, ".txt", sep = ""))
+  
+  # Print or further process the comparison results as needed
+  # For example, print p-values for each pairwise comparison
+  cat("Sample:", sample, "\n")
+  for (capture_comparison in names(comparison_results)) {
+    p_value <- comparison_results[[capture_comparison]]$p.value
+    cat(capture_comparison, "t-test p-value:", p_value, "\n")
+    cat(capture_comparison, "t-test p-value:", p_value, "\n", file = t_test_output_file, append = TRUE)
+  }
+  
+  # Perform a one-way ANOVA test for the same sample across captures
+  sample_data <- lapply(captures, function(capture) {
+    data_frames[[paste(capture, sample, sep = "_")]]$DNA_Coverage
+  })
+  anova_result <- aov(DNA_Coverage ~ as.factor(Capture), data = data.frame(Capture = captures, DNA_Coverage = unlist(sample_data)))
+  anova_p_value <- summary(anova_result)[[1]]$`Pr(>F)`[1]
+  
+  # Create a file to store ANOVA results for this sample
+  anova_output_file <- file.path(output_dir, paste("anova_results_", sample, ".txt", sep = ""))
+  
+  # Open the file for writing
+  cat("ANOVA p-value for", sample, "across captures:", anova_p_value, "\n\n", file = anova_output_file)
+  cat("ANOVA p-value for", sample, "across captures:", anova_p_value, "\n\n")
+}
+```
+
+
+
+
+```{r Make plotting function}
+perform_comparison_and_plot <- function(sample, capture1, capture2) {
+  # Get the data frames for the two captures and the same sample
+  df1 <- data_frames[[paste(capture1, sample, sep = "_")]]
+  df2 <- data_frames[[paste(capture2, sample, sep = "_")]]
+  
+  # Merge the data frames on "Start" and select relevant columns
+  merged_df <- merge(df1, df2[, c("Start", "DNA_Coverage", "Exon_Size_Class")], by = "Start")
+  
+  # Filter rows where both DNA_Coverage values are not zero
+  TotalExon <- merged_df[merged_df$DNA_Coverage.x != 0 & merged_df$DNA_Coverage.y != 0, ]
+  TotalExon <- TotalExon[, -5]  # Remove unnecessary column
+  
+  # Modify Exon_Size_Class as needed
+  TotalExon$Exon_Size_Class <- factor(TotalExon$Exon_Size_Class.y, levels = c("Lower", "Middle", "Upper"))
+  TotalExon$Exon_Size_Class <- revalue(TotalExon$Exon_Size_Class.y, c("Lower" = "Lower 10%", "Upper" = "Upper 10%", "Middle" = "Middle 80%"))
+  
+  # Calculate density
+  get_density <- function(x, y, n = 100) {
+    dens <- MASS::kde2d(x = x, y = y, n = n)
+    ix <- findInterval(x, dens$x)
+    iy <- findInterval(y, dens$y)
+    ii <- cbind(ix, iy)
+    return(dens$z[ii])
+  }
+  TotalExon$density <- get_density(TotalExon$DNA_Coverage.x, TotalExon$DNA_Coverage.y)
+  
+  # Set color palette
+  cbPalette <- c("#009E73", "#D55E00", "#56B4E9", "#0072B2", "#E69F00", "#F0E442", "#999999", "#CC79A7")
+  t <- cbPalette[1]
+  cbPalette[1] <- cbPalette[2]
+  cbPalette[2] <- t
+  
+  # Scale DNA_Coverage values
+  TotalExon$DNA_Coverage.y <- TotalExon$DNA_Coverage.y / 6
+  TotalExon$DNA_Coverage.x <- TotalExon$DNA_Coverage.x / 6
+  
+  # Create the plot
+  b1 <- ggplot(TotalExon, aes(x = DNA_Coverage.x + 1, y = DNA_Coverage.y + 1, alpha = 1 / density),
+               fill = Exon_Size_Class, color = Exon_Size_Class) +
+    geom_point(aes(color = TotalExon$Exon_Size_Class, fill = TotalExon$Exon_Size_Class, shape = TotalExon$Exon_Size_Class)) +
+    geom_smooth(method = "auto", alpha = 0.5, size = 0, se = TRUE) +
+    geom_abline(linetype = "dashed", color = "red") +
+    stat_smooth(geom = "line", alpha = 0.75, size = 0.5, linetype = "dashed") +
+    scale_alpha_continuous(guide = "none", range = c(.2, .95)) +
+    scale_shape_manual(values = c(15, 16, 17), name = "Exon Size Percentile") +
+    scale_fill_manual(values = cbPalette, name = "Exon Size Percentile") +
+    scale_color_manual(values = cbPalette, name = "Exon Size Percentile") +
+    xlab(paste("Mean", capture1, "DNA Reads per Exon Base Pair")) +
+    ylab(paste("Mean", capture2, "DNA Reads per Exon Base Pair")) +
+    theme_bw() +
+    theme(legend.position = c(0.9, 0.15))
+  
+  # Define the output file name
+  output_file <- file.path(output_dir, paste("Figure_insert_norm_", sample, "_", capture1, "_vs_", capture2, ".png", sep = ""))
+  
+  # Save the plot as an image file
+  png(filename = output_file, type = "cairo", units = "px", width = 5600, 
+      height = 3000, res = 600, bg = "transparent")
+  print(b1)
+  dev.off()
+}
+
+# Loop through captures and samples to perform comparisons and
+```
+
+```{r Run perform comparison function on all samples}
+# Define a list of capture names and sample names
+captures <- c("Capture1", "Capture2", "Capture3", "Capture4")
+samples <- c("B3", "B4", "G3", "G5", "K3", "K4", "M3", "M4", "N2")
+
+# Initialize an empty list to store data frames
+data_frames <- list()
+
+# Loop through captures and samples to read data files
+for (capture in captures) {
+  for (sample in samples) {
+    file_name <- paste(capture, "_", sample, ".indiv.ExonMeanCoverage.txt", sep = "")
+    file_path <- file.path("/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/", file_name)
+    df <- read.table(file_path, header = TRUE)
+    df <- as.data.frame(df)
+    # Add capture and sample information as columns
+    df$Capture <- capture
+    df$Sample <- sample
+    data_frames[[paste(capture, sample, sep = "_")]] <- df
+  }
+}
+
+# Directory to store result files and plots
+output_dir <- "/home/jgreen/eager_obj1a/04_coverage_analysis/02_exon_stats/02_indiv/results/"
+
+# Create the output directory if it doesn't exist
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir)
+}
+
+# Loop through captures and samples to perform comparisons and generate plots
+for (sample in samples) {
+  for (capture1 in captures) {
+    for (capture2 in captures) {
+      if (capture1 != capture2) {
+        # Call the function to perform comparison and generate plot
+        perform_comparison_and_plot(sample, capture1, capture2)
+      }
+    }
+  }
+}
+```
